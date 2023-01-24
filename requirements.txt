@@ -1,0 +1,8 @@
+Box2D==2.3.2
+Box2D-kengz==2.3.3
+glcontext==2.3.7
+moderngl==5.7.4
+numpy==1.24.1
+Pillow==9.4.0
+pygame==2.1.2
+PyGLM==2.7.0
