@@ -52,6 +52,14 @@ class JamDrawText(Game):
         text3.set_char_color(random.randrange(0, len(text3.text)), pg.Color('Blue'))
         self.texts.append(text3)
 
+        text4 = Text("UPSIDE-DOWN", font_sp_sheet)
+        text4.position = glm.vec2(400, 128+16)
+        text4.size = glm.vec2(16, 16)
+        text4.alignment = TextAlignment.LEFT
+        text4.angle = 180
+        text4.set_char_color(random.randrange(0, len(text4.text)), pg.Color('Blue'))
+        self.texts.append(text4)
+
 
 if __name__ == '__main__':
     app = JamDrawText()

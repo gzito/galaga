@@ -55,7 +55,6 @@ class Attackers:
         self.__num_attackers -= 1
 
 
-
 # ===================================================================================================
 # PlayingState
 # ===================================================================================================
@@ -854,6 +853,11 @@ class AttractState(GameState):
         self.__substate = new_state
         self.__scratch1 = 0
         self.__state_timer = 0.0
+
+    def enter(self):
+        # Show 1UP, HIGH SCORE and initial high score
+        self.__game.set_text_range_visible(TEXT_1UP, TEXT_20000, True)
+        self.__game.stars_svc.enable()
 
     def update(self):
         self.do_attract_sequence()

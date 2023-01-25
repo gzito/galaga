@@ -238,7 +238,7 @@ class Sprite:
                 self.__frame = self.__animation.get_current_frame()
 
     def render(self, sprite_batch: SpriteBatch):
-        if self.visible:
+        if self.active and self.visible:
             sprite_batch.draw(texture=self.__frame.texture,
                               position=self.__position,
                               source_rect=self.__frame.rect,

@@ -25,24 +25,26 @@ class Star(Sprite):
         return self.__service.speed
 
     def update(self, delta_time: float):
-        dygdt = pcy2vy(self.speed) * delta_time
-        self.counter -= delta_time
-        if self.counter < 0:
-            self.visible = not self.visible
-            self.counter = self.time_to_live
+        if self.active:
+            dygdt = pcy2vy(self.speed) * delta_time
+            self.counter -= delta_time
+            if self.counter < 0:
+                self.visible = not self.visible
+                self.counter = self.time_to_live
 
-        sy = self.y + dygdt
-        if sy > pcy2vy(94):
-            sy -= pcy2vy(89)
-        elif sy < pcy2vy(6):
-            sy += pcy2vy(89)
-        self.y = sy
+            sy = self.y + dygdt
+            if sy > pcy2vy(94):
+                sy -= pcy2vy(89)
+            elif sy < pcy2vy(6):
+                sy += pcy2vy(89)
+            self.y = sy
 
 
 class StarsService:
     def __init__(self, game):
         self.__stars_speed = 0.0
         self.__game = game
+        self.__stars = []
 
     @property
     def speed(self) -> float:
@@ -57,4 +59,13 @@ class StarsService:
             a_star = Star(self, self.__game.services[ASSET_SERVICE].get('textures/star'))
             a_star.layer_depth = 1.0
             self.__game.sprites.append(a_star)
+            self.__stars.append(a_star)
             count -= 1
+
+    def enable(self):
+        for s in self.__stars:
+            s.active = True
+
+    def disable(self):
+        for s in self.__stars:
+            s.active = False

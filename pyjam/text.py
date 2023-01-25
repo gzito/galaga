@@ -170,13 +170,15 @@ class Text:
                 else:
                     colors = [self.__color] * len(self.text)
 
-                batch.draw_string(sp_sheet=self.__sheet_or_font, text=self.text,
-                                  position=pos, w=self.size.x, h=self.size.y,
+                batch.draw_string(sp_sheet=self.__sheet_or_font,
+                                  text=self.text,
+                                  position=pos,
+                                  w=self.size.x, h=self.size.y,
+                                  rotation=self.angle,
                                   chars_colors=colors,
                                   kerning_width=self.__sheet_or_font.kerning_width,
                                   layer_depth=self.layer_depth)
             else:
-                # batch.draw_string_sprite_font(sprite_font=self.sp_sheet, text=self.text,position=self.pos, color=self.color)
                 if self.size != glm.vec2(0, 0):
                     scale = glm.vec2(self.size.x / self.__sheet_or_font.size, self.size.y / self.__sheet_or_font.size)
                 else:

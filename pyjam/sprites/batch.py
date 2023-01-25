@@ -456,7 +456,7 @@ class SpriteBatch:
             self.flush_if_needed()
 
     def draw_string(self, sp_sheet: SpriteSheet, text: str, position: glm.vec2,
-                    w: float, h: float,
+                    w: float, h: float, rotation: float,
                     chars_colors=None, kerning_width=0, layer_depth: float = 0.1):
         if chars_colors is None:
             chars_colors = list()
@@ -509,10 +509,19 @@ class SpriteBatch:
             if self.__game.is_origin_topleft():
                 self.__tex_coord_tl.y, self.__tex_coord_br.y = self.__tex_coord_br.y, self.__tex_coord_tl.y
 
-            item.set(offset.x + position.x, offset.y + position.y,
-                     w, h,
-                     chars_colors[i],
-                     self.__tex_coord_tl, self.__tex_coord_br, layer_depth)
+            if rotation == 0:
+                item.set(offset.x + position.x, offset.y + position.y,
+                         w, h,
+                         chars_colors[i],
+                         self.__tex_coord_tl, self.__tex_coord_br, layer_depth)
+            else:
+                item.set_extended(position.x, position.y,
+                                  offset.x, offset.y,
+                                  w, h,
+                                  utils.sin_deg(rotation), utils.cos_deg(rotation),
+                                  chars_colors[i],
+                                  self.__tex_coord_tl, self.__tex_coord_br,
+                                  layer_depth)
 
             offset.x += kerning_width
 

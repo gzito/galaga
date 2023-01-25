@@ -7,6 +7,7 @@ from fxservice import RunningFxService
 from entities import Enemy, Bullet, Player
 from galaga_data import *
 from galaga_states import PlayingState, AttractState
+from hwstartup import HwStartupState
 
 from pyjam.application import *
 from pyjam.sprite import Sprite
@@ -155,6 +156,7 @@ class Galaga(Game):
         white_frame = SpriteFrame(texture_service.create_color_texture(pg.Color('white')))
         asset_service.insert('textures/star', white_frame)
         self.stars_svc.create_stars(NUM_STARS)
+        self.stars_svc.disable()
 
         # create sprites
         entity_offset = len(self.sprites)
@@ -240,18 +242,16 @@ class Galaga(Game):
         self.stars_svc.speed = STAR_MAX_SPEED
         self.num_credits = 0
 
-        # SetTextRangeVisible(TEXT_GALAGA, TEXT_END_GAME_TEXT, 0)
+        self.set_text_range_visible(TEXT_GALAGA, TEXT_END_GAME_TEXT, False)
         self.set_sprite_range_visible(0, len(self.sprites) - 1, False)
-
-        # Show 1UP, HIGH SCORE and initial high score
-        self.set_text_range_visible(TEXT_1UP, TEXT_20000, True)
 
         # create FPS text
         self.fps_text = self.create_text("00", (100, 0), COLOR_WHITE, TextAlignment.RIGHT)
         self.fps_text.visible = False
         self.texts.append(self.fps_text)
 
-        self.change_state(AttractState(self, AttractState.Substate.TITLE))
+        #self.change_state(AttractState(self, AttractState.Substate.TITLE))
+        self.change_state(HwStartupState(self, HwStartupState.Substate.MEM_CHECK))
 
     @staticmethod
     def get_frames(base_frame_name, frames_count):
@@ -270,18 +270,21 @@ class Galaga(Game):
             self.sprites[i].visible = vis_flag
 
     def update(self):
-        self.process_input()
-        self.update_fps_text()
-
-        if self.coin_dropped:
-            self.sfx_play(SOUND_COIN_DROPPED)
-            self.add_credit()
-            if isinstance(self.state, AttractState):
-                self.state.substate = AttractState.Substate.HAVE_CREDIT
-
-        if isinstance(self.state, PlayingState) and self.state.is_game_over():
+        if isinstance(self.state, HwStartupState) and self.state.substate == HwStartupState.Substate.END_HW_STARTUP:
             self.change_state(AttractState(self, AttractState.Substate.TITLE))
-            self.set_sprite_range_visible(0, self.ent_svc.get_sprite_offset(EntityType.RED_BULLET), False)
+        else:
+            self.process_input()
+            self.update_fps_text()
+
+            if self.coin_dropped:
+                self.sfx_play(SOUND_COIN_DROPPED)
+                self.add_credit()
+                if isinstance(self.state, AttractState):
+                    self.state.substate = AttractState.Substate.HAVE_CREDIT
+
+            if isinstance(self.state, PlayingState) and self.state.is_game_over():
+                self.change_state(AttractState(self, AttractState.Substate.TITLE))
+                self.set_sprite_range_visible(0, self.ent_svc.get_sprite_offset(EntityType.RED_BULLET), False)
 
         super().update()
 

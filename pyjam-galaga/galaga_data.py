@@ -250,21 +250,19 @@ g_texts_data = [
     (TEXT_BONUS, 'BONUS', (29.00, 58.00), COLOR_ROBIN, TextAlignment.LEFT),
     (TEXT_BONUS_NUM, '100', (54.00, 58.00), COLOR_ROBIN, TextAlignment.LEFT),
     (TEXT_SPECIAL_BONUS, 'SPECIAL BONUS 10000 PTS', (50, 60), COLOR_YELLOW, TextAlignment.CENTER),
-    (TEXT_PERFECT, 'PERFECT !', (50, 40), COLOR_RED, TextAlignment.CENTER)
+    (TEXT_PERFECT, 'PERFECT !', (50, 40), COLOR_RED, TextAlignment.CENTER),
+    (TEXT_RAM_OK, 'RAM OK', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_ROM_OK, 'ROM OK', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_UPRIGHT, 'UPRIGHT', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_1_COIN_1_CREDIT, '1 COIN  1 CREDIT', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_3_FIGHTERS, '3 FIGHTERS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_RANK_A, 'RANK  A', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_SOUND_00, 'SOUND 00', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_1ST_BONUS, '1ST BONUS 20000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_2ND_BONUS, '2ND BONUS 70000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
+    (TEXT_EVERY_BONUS, 'AND EVERY 70000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT)
 ]
 
-"""
-(TEXT_RAM_OK, 'RAM OK', (7.5, 0), COLOR_RED),
-(TEXT_ROM_OK, 'ROM OK', (7.5, 0), COLOR_RED),
-(TEXT_UPRIGHT, 'UPRIGHT', (7.5, 0), COLOR_RED),
-(TEXT_1_COIN_1_CREDIT, '1 COIN  1 CREDIT', (7.5, 0), COLOR_RED),
-(TEXT_3_FIGHTERS, '3 FIGHTERS', (7.5, 0), COLOR_RED),
-(TEXT_RANK_A, 'RANK  A', (7.5, 0), COLOR_RED),
-(TEXT_SOUND_00, 'SOUND 00', (7.5, 0), COLOR_RED),
-(TEXT_1ST_BONUS, '1ST BONUS 20000 PTS', (7.5, 0), COLOR_RED),
-(TEXT_2ND_BONUS, '2ND BONUS 70000 PTS', (7.5, 0), COLOR_RED),
-(TEXT_EVERY_BONUS, 'AND EVERY 70000 PTS', (7.5, 0), COLOR_RED)
-"""
 
 # ------------------------------------------------------------------------------
 # Spawn and path data
