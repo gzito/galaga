@@ -9,6 +9,7 @@ import pygame as pg
 from pyjam import utils
 from pyjam.constants import *
 from pyjam.core import Bounds
+from pyjam.interfaces import IDisposable
 from pyjam.sprites.sheet import SpriteSheet
 from pyjam.texture import Texture2D
 
@@ -81,7 +82,7 @@ class SpriteBatchItem:
             tex_coord_br.y)
 
 
-class SpriteBatcher:
+class SpriteBatcher(IDisposable):
     def __init__(self, game, capacity=0):
         self.__initial_batch_size = 256
 
@@ -245,9 +246,9 @@ class SpriteBatcher:
             num_batches += 1
 
         if self.__uploaded:
-            self.destroy()
+            self.dispose()
 
-    def destroy(self):
+    def dispose(self):
         if self.__vao is not None:
             self.__vao.release()
         if self.__ebo is not None:
@@ -257,7 +258,7 @@ class SpriteBatcher:
         self.__uploaded = False
 
 
-class SpriteBatch:
+class SpriteBatch(IDisposable):
     def __init__(self, game, capacity=0):
         self.__sort_mode = SpriteSortMode.DEFERRED
         self.__batcher = SpriteBatcher(game, capacity)
@@ -689,5 +690,5 @@ class SpriteBatch:
         # We need to flush if we're using Immediate sort mode.
         self.flush_if_needed()
 
-    def destroy(self):
-        self.__batcher.destroy()
+    def dispose(self):
+        self.__batcher.dispose()

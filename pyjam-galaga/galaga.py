@@ -24,6 +24,7 @@ class Galaga(Game):
         self.set_assets_root('./assets')
 
         self.go_fullscreen = False
+        self.skip_hw_startup = True
 
         self.stars_svc = StarsService(self)
 
@@ -250,8 +251,10 @@ class Galaga(Game):
         self.fps_text.visible = False
         self.texts.append(self.fps_text)
 
-        #self.change_state(AttractState(self, AttractState.Substate.TITLE))
-        self.change_state(HwStartupState(self, HwStartupState.Substate.MEM_CHECK))
+        if self.skip_hw_startup:
+            self.change_state(AttractState(self, AttractState.Substate.TITLE))
+        else:
+            self.change_state(HwStartupState(self, HwStartupState.Substate.MEM_CHECK))
 
     @staticmethod
     def get_frames(base_frame_name, frames_count):
@@ -270,8 +273,10 @@ class Galaga(Game):
             self.sprites[i].visible = vis_flag
 
     def update(self):
+        # hw-startup state
         if isinstance(self.state, HwStartupState) and self.state.substate == HwStartupState.Substate.END_HW_STARTUP:
             self.change_state(AttractState(self, AttractState.Substate.TITLE))
+        # attract or play state
         else:
             self.process_input()
             self.update_fps_text()
@@ -297,16 +302,6 @@ class Galaga(Game):
 
         self.fps_text.text = f'{fps:.0f}'
         self.fps_text.color = pg.Color(fps_color)
-
-    def render(self):
-        super().render()
-
-        """
-        self.get_sprite_batch().begin(SpriteSortMode.DEFERRED, transform_matrix=self.get_virtual_matrix())
-        sprite_frame = self.services[ASSET_SERVICE].get('textures/star')
-        draw_line(self.get_sprite_batch(), pcx2vx(50), 0, pcx2vx(50), pcy2vy(100), sprite_frame.texture, 1)
-        self.get_sprite_batch().end()
-        """
 
     def process_input(self):
         self.direction = 0

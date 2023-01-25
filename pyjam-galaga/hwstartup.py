@@ -1,15 +1,15 @@
 import random
-from enum import IntEnum
 
 import glm
-import pygame as pg
+import numpy as np
 
-from pyjam.application import pc2v, GameState
+from pyjam.sprites.batch import SpriteBatch
+from pyjam.application import pc2v, GameState, pcy2vy, pcx2vx
 from pyjam.constants import ASSET_SERVICE
 from pyjam.sprite import Sprite
-from pyjam.sprites.animation import Animation2D
 
-from constants import *
+from galaga_data import *
+from pyjam.sprites import primitives2d
 
 NUM_CHARS_IN_FONT = 80
 FONT_HEIGHT = 34
@@ -36,13 +36,21 @@ class HwStartupState(GameState):
         self.__state_timer = 0.0
         self.__substate = substate
         self.__scratch1 = 0
+        self.__font_sheet = None
+
+        # mem_check variables
         self.__flipflop = 0
         self.__stage = 0
         self.__xp = 0
         # tiles[ORIGINAL_Y_CELLS][ORIGINAL_X_CELLS], a matrix of Tile
         self.__tiles = [[Tile() for x in range(ORIGINAL_X_CELLS)] for y in range(ORIGINAL_Y_CELLS)]
         self.__memcheck_timer = 0.0
-        self.__font_sheet = None
+
+        # ram_ok variables
+        self.pos = [(80, 90), (80, 85), (80, 80), (80, 75), (80, 70), (80, 65), (80, 60), (90, 50), (90, 45), (90, 40)]
+
+        # show_grid variables
+        self.sp_batch = None
 
     @property
     def substate(self):
@@ -103,11 +111,11 @@ class HwStartupState(GameState):
 
                 # if the character is -1 then leave the block unchanged (stage 3)
                 if character != -1:
-                    self.__tiles[y][x].sprite.frame = self.__font_sheet.frames[str(31+character)]
+                    self.__tiles[y][x].sprite.frame = self.__font_sheet.frames[str(31 + character)]
 
     def mem_check(self):
         if self.__scratch1 == 0:
-            self.__font_sheet = self.__game.services[ASSET_SERVICE].get('fonts/font')
+            self.__font_sheet = self.game.services[ASSET_SERVICE].get('fonts/font')
             # Make sprites for tiles
             for y in range(ORIGINAL_Y_CELLS):
                 for x in range(ORIGINAL_X_CELLS):
@@ -119,7 +127,7 @@ class HwStartupState(GameState):
                     self.__tiles[y][x].sprite.position = pc2v(glm.vec2(x * (100.0 / ORIGINAL_X_CELLS),
                                                                        y * (100.0 / ORIGINAL_Y_CELLS)))
 
-                    self.__game.sprites.append(self.__tiles[y][x].sprite)
+                    self.game.sprites.append(self.__tiles[y][x].sprite)
 
             self.__state_timer = 0.0
             self.__flipflop = 0
@@ -129,9 +137,9 @@ class HwStartupState(GameState):
             self.__memcheck_timer = 0
             self.__scratch1 = 1
         elif self.__scratch1 > 0:
-            self.__state_timer += self.__game.delta_time
+            self.__state_timer += self.game.delta_time
             if self.__state_timer < 8.0:
-                self.__memcheck_timer += self.__game.delta_time
+                self.__memcheck_timer += self.game.delta_time
                 # wait 50 ms
                 if self.__memcheck_timer < 0.05:
                     return
@@ -156,7 +164,7 @@ class HwStartupState(GameState):
                 # Delete tile sprites
                 for y in range(0, ORIGINAL_Y_CELLS):
                     for x in range(0, ORIGINAL_X_CELLS):
-                        self.__game.sprites.remove(self.__tiles[y][x].sprite)
+                        self.game.sprites.remove(self.__tiles[y][x].sprite)
                 self.substate = HwStartupState.Substate.RAM_OK
 
         # Tick stages over
@@ -168,10 +176,75 @@ class HwStartupState(GameState):
             self.__stage = 4
 
     def ram_ok(self):
-        self.substate = HwStartupState.Substate.SHOW_GRID
+        # Show RAM OK
+        if self.__scratch1 == 0:
+            self.__state_timer = 0.0
+            self.game.texts[TEXT_RAM_OK].position = pc2v(glm.vec2(40, 10))
+            self.game.texts[TEXT_RAM_OK].visible = True
+            self.__scratch1 += 1
+        elif self.__scratch1 == 1:
+            self.__state_timer += self.game.delta_time
+            if self.__state_timer >= 250 / 1000.0:
+                self.game.texts[TEXT_RAM_OK].visible = False
+                self.__scratch1 += 1
+        # Show the status upside-down
+        elif self.__scratch1 == 2:
+            for i, p in enumerate(self.pos):
+                point_index = i + TEXT_RAM_OK
+                self.game.texts[point_index].position = pc2v(glm.vec2(self.pos[i]))
+                self.game.texts[point_index].angle = 180
+                self.game.texts[point_index].visible = True
+            self.game.texts[TEXT_SOUND_00].visible = False
+            self.__state_timer = 0.0
+            self.__scratch1 += 1
+        # Hide sound
+        elif self.__scratch1 == 3:
+            self.__state_timer += self.game.delta_time
+            if self.__state_timer >= 250 / 1000.0:
+                self.game.texts[TEXT_SOUND_00].visible = True
+                self.__state_timer = 0.0
+                self.__scratch1 += 1
+        # Show sound
+        elif self.__scratch1 == 4:
+            self.__state_timer += self.game.delta_time
+            if self.__state_timer >= 250 / 1000.0:
+                self.game.set_text_range_visible(TEXT_RAM_OK,TEXT_EVERY_BONUS, False)
+                self.substate = HwStartupState.Substate.SHOW_GRID
 
     def show_grid(self):
-        self.substate = HwStartupState.Substate.END_HW_STARTUP
+        if self.__scratch1 == 0:
+            self.sp_batch = SpriteBatch(self.game)
+            self.__scratch1 += 1
+            self.game.sfx_play(SOUND_PLAYER_DIE)
+            self.__state_timer = 0.0
+        elif self.__scratch1 == 1:
+            vw = self.game.get_virtual_display_width()
+            vh = self.game.get_virtual_display_height()
+            dw = self.game.get_display_width()
+            dh = self.game.get_display_height()
+            sw = float(vw) / dw
+            sh = float(vh) / dh
+
+            self.sp_batch.begin(transform_matrix=self.game.get_virtual_matrix())
+            texture = self.game.services[ASSET_SERVICE].get('textures/star').texture
+
+            for y in range(ORIGINAL_Y_CELLS//2 + 1):
+                p0 = y * (99.6/(ORIGINAL_Y_CELLSF/2))
+                p1 = p0 + 0.4
+                for y1 in np.arange(p0,p1+sh, sh):
+                    primitives2d.draw_line(self.sp_batch, 0.0, pcy2vy(y1), pcx2vx(100.0), pcy2vy(y1), texture, 1.0)
+
+            for x in range(ORIGINAL_X_CELLS//2 + 1):
+                p0 = x * (99.6/(ORIGINAL_X_CELLSF/2))
+                p1 = p0 + 0.4
+                for x1 in np.arange(p0,p1+sw, sw):
+                    primitives2d.draw_line(self.sp_batch, pcx2vx(x1), 0.0, pcx2vx(x1), pcy2vy(100.0), texture, 1.0)
+            self.sp_batch.end()
+
+            self.__state_timer += self.game.delta_time
+            if self.__state_timer > 0.75:
+                self.sp_batch.dispose()
+                self.substate = HwStartupState.Substate.END_HW_STARTUP
 
     def startup_sequence(self):
         if self.substate == HwStartupState.Substate.MEM_CHECK:

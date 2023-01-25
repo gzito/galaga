@@ -251,16 +251,16 @@ g_texts_data = [
     (TEXT_BONUS_NUM, '100', (54.00, 58.00), COLOR_ROBIN, TextAlignment.LEFT),
     (TEXT_SPECIAL_BONUS, 'SPECIAL BONUS 10000 PTS', (50, 60), COLOR_YELLOW, TextAlignment.CENTER),
     (TEXT_PERFECT, 'PERFECT !', (50, 40), COLOR_RED, TextAlignment.CENTER),
-    (TEXT_RAM_OK, 'RAM OK', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_ROM_OK, 'ROM OK', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_UPRIGHT, 'UPRIGHT', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_1_COIN_1_CREDIT, '1 COIN  1 CREDIT', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_3_FIGHTERS, '3 FIGHTERS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_RANK_A, 'RANK  A', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_SOUND_00, 'SOUND 00', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_1ST_BONUS, '1ST BONUS 20000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_2ND_BONUS, '2ND BONUS 70000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT),
-    (TEXT_EVERY_BONUS, 'AND EVERY 70000 PTS', (7.5, 0), COLOR_RED, TextAlignment.LEFT)
+    (TEXT_RAM_OK, 'RAM OK', (80.0, 90.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_ROM_OK, 'ROM OK', (80.0, 85.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_UPRIGHT, 'UPRIGHT', (80.0, 80.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_1_COIN_1_CREDIT, '1 COIN  1 CREDIT', (80.0, 75.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_3_FIGHTERS, '3 FIGHTERS', (80.0, 70.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_RANK_A, 'RANK  A', (80.0, 65.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_SOUND_00, 'SOUND 00', (80.0, 60.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_1ST_BONUS, '1ST BONUS 20000 PTS', (90.0, 50.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_2ND_BONUS, '2ND BONUS 70000 PTS', (90.0, 45.0), COLOR_WHITE, TextAlignment.LEFT),
+    (TEXT_EVERY_BONUS, 'AND EVERY 70000 PTS', (90.0, 40.0), COLOR_WHITE, TextAlignment.LEFT)
 ]
 
 
