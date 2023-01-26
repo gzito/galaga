@@ -529,7 +529,7 @@ class Score:
 
 
 class Leaderboard:
-    filename = os.path.join(os.path.expanduser('~'), 'galaga-highscores.txt')
+    filename = os.path.join(os.path.expanduser('~'), 'pyjam-galaga_hiscores.txt')
 
     def __init__(self):
         self.high_scores = [Score() for x in range(5)]
