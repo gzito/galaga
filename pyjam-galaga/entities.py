@@ -358,7 +358,7 @@ class Player:
             if Game.instance.sfx_get_num_channels(SOUND_BREATHING_TIME) <= 0:
                 Game.instance.sfx_play(SOUND_BREATHING_TIME, -1)
 
-            # if there are no more lives the game is over
+            # if there are no more lives => the game is over
             if self.lives == 0:
                 self.capture_state = CaptureState.READY
                 self.ships[0].plan = Plan.DEAD

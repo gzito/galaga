@@ -39,7 +39,7 @@ You can find the library code into **pyjam** folder.
 
 ![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-2.jpg?raw=true)
 
-## Current status
+## pyjam-galaga current status
 For several pieces of Stefan's code I merely ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to pyjam.
 I also added the code to complete the rescue of fighter sequence missed in the original
@@ -72,10 +72,17 @@ f) Python code is not as clean as I would like, there is still a lot of work to 
 
 To play Galaga, cd into pyjam-galaga subfolder and run main.py.  
 
-Keys:  
+## pyjam-galaga keys  
 **Enter:** insert coin  
 **1 / 2:** start one or two player(s) match  
 **Left/right cursor keys:** move the ship  
 **Ctrl:** fire  
 **Esc:** Exit the game  
 **F1:** show/hide FPS indicator  
+
+## Acknowledgements
+[Stefan Wessels](https://github.com/StewBC)  
+[moderngl](https://github.com/moderngl/moderngl)  
+[PyGLM](https://github.com/Zuzu-Typ/PyGLM) and [glm](https://github.com/g-truc/glm)   
+[MonoGame](https://github.com/MonoGame/MonoGame)  
+[pygame](https://github.com/pygame/pygame)  
