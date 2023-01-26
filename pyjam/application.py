@@ -515,8 +515,15 @@ class Game:
         proj_mat = self.camera.get_projection_matrix()
         # parenthesis are not necessary but explanatory
         s = proj_mat * (view_mat * (world_mat * glm.vec4(v, 1)))
-        s[0] = ((s[0] / s[3]) + 1.0) * self.get_display_width() / 2
-        s[1] = ((s[1] / s[3]) + 1.0) * self.get_display_height() / 2
+
+        vp = self.__ctx.viewport
+        vx = vp[0]
+        vy = vp[1]
+        vw = vp[2]
+        vh = vp[3]
+
+        s[0] = (((s[0] / s[3]) + 1.0) / 2) * vw + vx
+        s[1] = (((s[1] / s[3]) + 1.0) / 2) * vh + vy
         s[2] = s[2] / s[3]
         return glm.vec3(s)
 

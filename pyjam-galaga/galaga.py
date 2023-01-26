@@ -306,6 +306,9 @@ class Galaga(Game):
         self.fps_text.color = pg.Color(fps_color)
 
     def process_input(self):
+        if isinstance(self.state, HwStartupState):
+            return
+
         self.direction = 0
         self.fire = 0
         self.coin_dropped = False

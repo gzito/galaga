@@ -66,9 +66,9 @@ c.6) Capture / rescue sequence is complete.
 
 d) The post-game flow with high-score taking, etc. is complete or quite complete.
 
-e) Once a highscore is made, the leaderboard is saved in the user home folder and automatically reloaded next time
+e) Once a highscore is made, the leaderboard is saved in the user home folder and automatically reloaded next time.
 
-f) Python code is not as clean as I would like, there is still a lot of work to be done
+f) Python code is not as clean as I would like, there is still a lot of work to be done.
 
 To play Galaga, cd into pyjam-galaga subfolder and run main.py.  
 
