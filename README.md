@@ -29,10 +29,8 @@ As many of you know it is very challenge to make a game from scratch without an 
 as 2d renderer, Pygame doesn't come with 2D animations, sprite sheets, sprite batch and so on. I chose to use Pygame
 for sound effects, I find that Pygame Mixer is a very cool implementation as sound framework.  
 So to get graphics I decided to write a small game library built on the excellent **moderngl** library, the OpenGL
-Python binding by Szabolcs Dombi and Einar Forselv.
-I rewrote some XNA / MonoGame classes in Python, such as the SpriteBatch class. 
-By default, the game run in a window; however it can also run in fullscreen, just change the proper configuration
-attribute in galaga class (i.e. *go_fullscreen*).  
+Python binding by Szabolcs Dombi and Einar Forselv. I rewrote some XNA / MonoGame classes in Python, such as the
+SpriteBatch class. I called it **pyjam**. 
 You can find the library code into **pyjam** folder.
 
 ![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot.jpg?raw=true)
@@ -42,6 +40,9 @@ For several pieces of Stefan's code I merely ported them as they are to Python l
 For other parts I did some refactoring and adaptation to pyjam.
 I also added the code to complete the rescue of fighter sequence missed in the original
 Stefan's work.
+
+By default, the game run in a window; however it can also run in fullscreen, just change the proper configuration
+attribute in galaga class (i.e. *go_fullscreen*).  
 
 Here is a brief summary of the state of the game:
 
