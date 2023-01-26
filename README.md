@@ -1,5 +1,6 @@
 # pyjam-galaga
-Remake of 1981's Galaga arcade game written in python, based on original work of Stefan Wessels.
+Remake of 1981's Galaga arcade game written in python, pyjam library and moderngl.
+Based on original work of Stefan Wessels.
 
 # The story
 Galaga is a 1981 fixed shooter arcade video game developed and published by Namco. In North America, it was released
