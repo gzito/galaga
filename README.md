@@ -49,7 +49,7 @@ c.1) The regular attack stages work pretty well.
 c.2) The challenging stages work for the first 3 or so.  
 c.3) The bees are quite complete.  The butterflies could use a bit of tuning.  
 c.4) The bosses still use the butterfly flight logic.  
-c.5) the 1 and 2 player support should be complete, but I've not completely tested it.  
+c.5) the 1 and 2 player support should be complete, though I've not completely tested it.  
 c.6) Capture / rescue sequence is complete.
 
 d) The post-game flow with high-score taking, etc. is complete or quite complete.
