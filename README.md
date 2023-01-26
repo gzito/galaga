@@ -24,16 +24,19 @@ I personally think Stefan did a great job, making really clear for the first tim
 how to code Galaga mechanics. I studied the code in great detail and I said myself: why not make a conversion
 using Python ? 
 
+![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-1.jpg?raw=true)
+
 ## pyjam
 As many of you know it is very challenge to make a game from scratch without an engine and I didn't want to use Pygame
-as 2d renderer, Pygame doesn't come with 2D animations, sprite sheets, sprite batch and so on. I chose to use Pygame
-for sound effects, I find that Pygame Mixer is a very cool implementation as sound framework.  
-So to get graphics I decided to write a small game library built on the excellent **moderngl** library, the OpenGL
-Python binding by Szabolcs Dombi and Einar Forselv. I rewrote some XNA / MonoGame classes in Python, such as the
-SpriteBatch class. I called it **pyjam**. 
+as 2d renderer. I wanted more than Pygame offers. I chose to use Pygame for sound effects, I find that Pygame Mixer
+is a very cool implementation as sound framework.  
+To render graphics I decided to write a small game library built on the excellent **moderngl** library, the OpenGL
+Python binding by Szabolcs Dombi and Einar Forselv. I added 2D animations, spritesheets and rewrote some XNA / MonoGame
+classes in Python, such as the SpriteBatch class.  
+I called it **pyjam**.  
 You can find the library code into **pyjam** folder.
 
-![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot.jpg?raw=true)
+![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-2.jpg?raw=true)
 
 ## Current status
 For several pieces of Stefan's code I merely ported them as they are to Python language.
