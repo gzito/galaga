@@ -215,6 +215,9 @@ class Player:
         # the boss entity which captured the fighter
         self.__captor_boss = None
 
+        self.__rescued_ship = None
+        self.__rescued_ship_dest = glm.vec2()
+
     @property
     def grid(self):
         return self.__grid
@@ -252,7 +255,19 @@ class Player:
     def is_captured(self) -> bool:
         return self.capture_state >= CaptureState.FIGHTER_CAPTURED
 
+    def swap_ships(self):
+        # when player 1 is alive and 0 dead, assign 1 to 0 so 0 is always the one that's alive
+        self.ships[0].x = self.ships[1].x
+        self.ships[0].y = self.ships[1].y
+        self.ships[0].plan = Plan.ALIVE
+        self.ships[0].sprite.visible = True
+        self.ships[1].plan = Plan.DEAD
+        self.ships[1].sprite.visible = False
+
     def kill(self, ship_num):
+        """
+        Player.kill() subroutine
+        """
         ship = self.ships[ship_num]
         ship.plan = Plan.DEAD
         ship.sprite.visible = 0
@@ -298,25 +313,25 @@ class Player:
                 self.ships[0].rotation = 0
                 self.ships[0].sprite.angle = self.ships[0].rotation
                 Game.instance.sfx_stop(SOUND_BEAM_CAPTURED)
-                player_entity = self.ships[0]
+                ship_0 = self.ships[0]
                 captured_entity = CapturedFighter()
                 captured_entity.entity_type = EntityType.CAPTURED_FIGHTER
-                captured_entity.x = player_entity.x
-                captured_entity.y = player_entity.y
-                captured_entity.rotation = player_entity.rotation
+                captured_entity.x = ship_0.x
+                captured_entity.y = ship_0.y
+                captured_entity.rotation = ship_0.rotation
                 captured_entity.sprite = Game.instance.get_first_sprite_by_ent_type(EntityType.CAPTURED_FIGHTER)
-                captured_entity.sprite.position = player_entity.sprite.position
-                captured_entity.sprite.angle = player_entity.sprite.angle
+                captured_entity.sprite.position = ship_0.sprite.position
+                captured_entity.sprite.angle = ship_0.sprite.angle
                 captured_entity.sprite.visible = True
                 captured_entity.plan = Plan.ALIVE
                 captured_entity.attack_index = -1
-                Game.instance.player().captured_fighter = captured_entity
-                boss_entity = Game.instance.player().get_captor_boss()
+                self.captured_fighter = captured_entity
+                boss_entity = self.get_captor_boss()
                 # sets the captured fighter position in the grid, one row just above the captor boss
                 Game.instance.enemies[Game.instance.current_player_idx][
                     boss_entity.position_index - 4] = captured_entity
-                player_entity.sprite.visible = False
-                player_entity.timer = 2.0
+                ship_0.sprite.visible = False
+                ship_0.timer = 2.0
                 self.capture_state = CaptureState.DISPLAY_CAPTURED
         # DISPLAY_CAPTURED
         elif self.capture_state == CaptureState.DISPLAY_CAPTURED:
@@ -335,25 +350,27 @@ class Player:
             if self.ships[0].timer < 0:
                 Game.instance.texts[TEXT_FIGHTER_CAPTURED].visible = False
                 self.capture_state = CaptureState.FIGHTER_CAPTURED
-        # CAPTURE_COMPLETE - goto in this state when the captured fighter arrives to grid
+        # CAPTURE_COMPLETE - goto in this state when the captured fighter arrives to grid, see enemy.decision_time()
         elif self.capture_state == CaptureState.CAPTURE_COMPLETE:
+            # fighter captured, so increase the number of enemies
+            self.enemies_alive += 1
             Game.instance.sfx_stop(SOUND_PLAYER_CAPTURED)
             if Game.instance.sfx_get_num_channels(SOUND_BREATHING_TIME) <= 0:
                 Game.instance.sfx_play(SOUND_BREATHING_TIME, -1)
 
             # if there are no more lives the game is over
-            if Game.instance.player().lives == 0:
+            if self.lives == 0:
                 self.capture_state = CaptureState.READY
-                Game.instance.player().ships[0].plan = Plan.DEAD
+                self.ships[0].plan = Plan.DEAD
             else:
-                Game.instance.player().captured_fighter.sprite.hotspot = glm.vec2(7, 8)
+                self.captured_fighter.sprite.hotspot = glm.vec2(7, 8)
                 self.ships[0].x = 50
                 self.ships[0].y = ((ORIGINAL_Y_CELLSF - 3.0) / ORIGINAL_Y_CELLSF) * 100
                 self.ships[0].plan = Plan.ALIVE
                 self.ships[0].sprite.visible = True
                 self.ships[0].sprite.position = pc2v(glm.vec2(self.ships[0].x, self.ships[0].y))
                 if not Game.instance.infinite_lives:
-                    Game.instance.player().lives -= 1
+                    self.lives -= 1
                 Game.instance.state.show_lives_icons()
                 self.ships[0].timer = 3
                 Game.instance.texts[TEXT_READY].visible = True
@@ -371,8 +388,8 @@ class Player:
             return
         # RESCUED
         elif self.capture_state == CaptureState.RESCUED:
-            cap_fighter = Game.instance.player().captured_fighter
-            ship_1 = Game.instance.player().ships[1]
+            cap_fighter = self.captured_fighter
+            ship_1 = self.ships[1]
             cap_fighter.plan = Plan.DEAD
             ship_1.x = cap_fighter.x
             ship_1.y = cap_fighter.y
@@ -383,60 +400,83 @@ class Player:
             Game.instance.state.attackers.clear_attacker(cap_fighter.attack_index)
             cap_fighter.attack_index = -1
 
-            Game.instance.player().captured_fighter = None
+            self.captured_fighter = None
             ship_1.sprite.position = pc2v(glm.vec2(ship_1.x, ship_1.y))
 
             if Game.instance.sfx_get_num_channels(SOUND_BREATHING_TIME) > 0:
                 Game.instance.sfx_stop(SOUND_BREATHING_TIME)
             Game.instance.sfx_play(SOUND_CAPTURED_FIGHTER_RESCUED, -1)
 
-            self.ships[0].timer = 2.0
+            self.ships[1].timer = 2.0
 
             self.capture_state += 1
         # SPINNING
         elif self.capture_state == CaptureState.SPINNING:
-            if not Game.instance.quiescence or self.ships[0].timer > 0:
-                r = Game.instance.player().ships[1].rotation
+            if not Game.instance.quiescence or self.ships[1].timer > 0:
+                r = self.ships[1].rotation
                 r += CAPTURE_SPIN_SPEED * Game.instance.delta_time
-                Game.instance.player().ships[1].rotation = r
-                Game.instance.player().ships[1].sprite.angle = r
-                self.ships[0].timer -= Game.instance.delta_time
+                self.ships[1].rotation = r
+                self.ships[1].sprite.angle = r
+                self.ships[1].timer -= Game.instance.delta_time
             else:
                 self.capture_state += 1
         # DOCKING
         elif self.capture_state == CaptureState.DOCKING:
-            ship_0 = Game.instance.player().ships[0]
-            ship_1 = Game.instance.player().ships[1]
+            # check if ship 0 is dead
+            if self.__rescued_ship is None:
+                if self.ships[0].plan == Plan.DEAD:
+                    self.swap_ships()
+                    self.__rescued_ship = self.ships[0]
+                    self.__rescued_ship_dest.x = 50
+                else:
+                    self.__rescued_ship = self.ships[1]
+                    self.__rescued_ship_dest.x = 50 + vx2pcx(self.ships[0].sprite.width)
+                self.__rescued_ship_dest.y = ((ORIGINAL_Y_CELLSF - 3.0) / ORIGINAL_Y_CELLSF) * 100
+                self.__rescued_ship.rotation = 0
+
             step = FIGHTER_RESCUED_MOVEMENT_SPEED * Game.instance.delta_time
-            ship_1.rotation = 0
-            ship_1_dest_x = 50 + vx2pcx(ship_0.sprite.width)
-            ship_1_dest_y = ((ORIGINAL_Y_CELLSF - 3.0) / ORIGINAL_Y_CELLSF) * 100
 
-            if ship_0.x > 50.0:
-                ship_0.x = utils.clamp(ship_0.x - step, 50.0, ship_0.x)
-            elif ship_0.x < 50.0:
-                ship_0.x = utils.clamp(ship_0.x + step, ship_0.x, 50.0)
+            # if ships[1] is ALIVE then it is the rescued ship, so move also ships[0]
+            if self.ships[1].plan == Plan.ALIVE:
+                if self.ships[0].x > 50.0:
+                    self.ships[0].x = utils.clamp(self.ships[0].x - step, 50.0, self.ships[0].x)
+                elif self.ships[0].x < 50.0:
+                    self.ships[0].x = utils.clamp(self.ships[0].x + step, self.ships[0].x, 50.0)
 
-            if ship_1.x > ship_1_dest_x:
-                ship_1.x = utils.clamp(ship_1.x - step, ship_1_dest_x, ship_1.x)
-            elif ship_1.x < ship_1_dest_x:
-                ship_1.x = utils.clamp(ship_1.x + step, ship_1.x, ship_1_dest_x)
-            elif ship_1.y < ship_1_dest_y:
-                ship_1.y = utils.clamp(ship_1.y + step, ship_1.y, ship_1_dest_y)
+            # move rescued ship
+            if self.__rescued_ship.x > self.__rescued_ship_dest.x:
+                self.__rescued_ship.x = utils.clamp(self.__rescued_ship.x - step,
+                                                    self.__rescued_ship_dest.x, self.__rescued_ship.x)
+            elif self.__rescued_ship.x < self.__rescued_ship_dest.x:
+                self.__rescued_ship.x = utils.clamp(self.__rescued_ship.x + step,
+                                                    self.__rescued_ship.x, self.__rescued_ship_dest.x)
+            elif self.__rescued_ship.y < self.__rescued_ship_dest.y:
+                self.__rescued_ship.y = utils.clamp(self.__rescued_ship.y + step,
+                                                    self.__rescued_ship.y, self.__rescued_ship_dest.y)
             else:
-                ship_1.y = ship_1_dest_y
+                self.__rescued_ship.y = self.__rescued_ship_dest.y
                 Game.instance.sfx_stop(SOUND_CAPTURED_FIGHTER_RESCUED)
                 if Game.instance.sfx_get_num_channels(SOUND_BREATHING_TIME) <= 0:
                     Game.instance.sfx_play(SOUND_BREATHING_TIME, -1)
 
+                self.__rescued_ship = None
+                Game.instance.state.attackers.clear_all()
+                # fighter rescued, so decrease the number of enemies
+                self.enemies_alive -= 1
                 self.capture_state = CaptureState.OFF
 
-            ship_0.sprite.position = pc2v(glm.vec2(ship_0.x, ship_0.y))
-            ship_1.sprite.position = pc2v(glm.vec2(ship_1.x, ship_1.y))
-            ship_1.sprite.angle = ship_1.rotation
+            # update fighter(s) sprites
+            if self.ships[0].plan == Plan.ALIVE:
+                self.ships[0].sprite.position = pc2v(glm.vec2(self.ships[0].x, self.ships[0].y))
+                self.ships[0].sprite.angle = self.ships[0].rotation
+            if self.ships[1].plan == Plan.ALIVE:
+                self.ships[1].sprite.position = pc2v(glm.vec2(self.ships[1].x, self.ships[1].y))
+                self.ships[1].sprite.angle = self.ships[1].rotation
 
     def was_hit(self, sprite) -> bool:
         """
+        Player.was_hit()
+
         Checks for collision between the fighter and enemy or red bullet sprite
         Also kills the fighter as needed
         """
@@ -453,14 +493,8 @@ class Player:
                         self.kill(1)
                         return True
                     elif self.ships[0].plan == Plan.DEAD:
-                        # if player 1 is alive and 0 dead, assign 1 to 0 so 0 is always the one that's alive
-                        self.ships[0].x = self.ships[1].x
-                        self.ships[0].y = self.ships[1].y
-                        self.ships[0].plan = Plan.ALIVE
-                        self.ships[0].sprite.visible = True
-                        self.ships[1].plan = Plan.DEAD
-                        self.ships[1].sprite.visible = False
-
+                        # if ships[1] is alive and ships[0] dead, assign 1 to 0 so 0 is always the one that's alive
+                        self.swap_ships()
         return False
 
 
@@ -643,10 +677,10 @@ class Enemy(Entity):
             else:
                 self.rotation = 0
                 self.plan = Plan.GRID
-                # if this enemy is the captor boss returning to the grid => the capture sequence is COMPLETE
-                if self is Game.instance.player().get_captor_boss() and \
-                        CaptureState.OFF < Game.instance.player().capture_state < CaptureState.CAPTURE_COMPLETE:
-                    Game.instance.player().capture_state = CaptureState.CAPTURE_COMPLETE
+                # if this enemy is the captured fighter returning to the grid => the capture sequence is COMPLETE
+                if self is Game.instance.player().captured_fighter:
+                    if CaptureState.OFF < Game.instance.player().capture_state < CaptureState.CAPTURE_COMPLETE:
+                        Game.instance.player().capture_state = CaptureState.CAPTURE_COMPLETE
         # end of a point in the path, maybe the end of the path
         elif self.plan == Plan.PATH:
             self.point_index += 1
@@ -676,6 +710,10 @@ class Enemy(Entity):
             self.plan = Plan.DEAD
             Game.instance.player().enemies_alive -= 1
             self.sprite.visible = False
+            # if this is CapturedFighter without captor boss => reset capture state
+            if self.entity_type == EntityType.CAPTURED_FIGHTER and Game.instance.player().get_captor_boss() is None:
+                Game.instance.player().captured_fighter = None
+                Game.instance.player().capture_state = CaptureState.OFF
         elif self.plan == Plan.DIVE_ATTACK:
             self.plan = Plan.GOTO_GRID
             self.y = 0.0
@@ -864,6 +902,8 @@ class Enemy(Entity):
 
     def was_hit(self) -> bool:
         """
+        Enemy.was_hit()
+
         Check for collision between this enemy and fighter's bullets
         Also check for a possible collision of this enemy with the fighter
         and if so kills the fighter
@@ -892,14 +932,6 @@ class Enemy(Entity):
                         self.sprite.visible = True
                         Game.instance.sfx_play(SOUND_HIT_COMMANDER_GREEN)
                     else:
-                        # check if the boss is captor
-                        if self.entity_type == EntityType.BOSS_BLUE and self.is_captor():
-                            player.clear_captor_boss()
-                            # check that this boss is not sleeping in the grid
-                            if self.plan != Plan.GRID and self.plan != Plan.ORIENT:
-                                if player.ships[0].plan != Plan.DEAD:
-                                    player.capture_state = CaptureState.RESCUED
-
                         self.kill()
 
                     # Don't check other bullets, this enemy is dead
@@ -907,7 +939,7 @@ class Enemy(Entity):
 
         # Check for a collision of this enemy with the player if not in challenge-stage and not spawning
         # during challenge stage or spawn it doesn't collide with the player
-        # However if this is an extra enemy then check for collision.
+        # However during spawn, if this is an extra enemy then check for collision.
         # During spawn, entities with plan == Plan.DIVE_AWAY are extra enemy
         if (player.spawn_active and self.plan != Plan.DIVE_AWAY) or player.stage & 3 == 3:
             return False
@@ -919,36 +951,47 @@ class Enemy(Entity):
         return False
 
     def kill(self):
+        """
+        Enemy.kill()
+        """
+
+        player = Game.instance.player()
         kind = self.entity_type
+
+        # check if this enemy is a boss, and also is captor
+        if kind == EntityType.BOSS_BLUE and self.is_captor():
+            player.clear_captor_boss()
+            # check that this boss is not sleeping in the grid
+            if self.plan != Plan.GRID and self.plan != Plan.ORIENT:
+                player.capture_state = CaptureState.RESCUED
 
         # when destroying captured fighter adjust internal varibles
         if kind == EntityType.CAPTURED_FIGHTER:
-            Game.instance.player().capture_state = CaptureState.OFF
-            Game.instance.player().captured_fighter = None
-            Game.instance.player().clear_captor_boss()
+            player.capture_state = CaptureState.OFF
+            player.captured_fighter = None
+            player.clear_captor_boss()
 
         self.sprite.visible = False
 
-        if kind != EntityType.CAPTURED_FIGHTER:
-            Game.instance.enemies_killed_this_stage += 1
-            Game.instance.player().hits += 1
-            Game.instance.player().enemies_alive -= 1
+        Game.instance.enemies_killed_this_stage += 1
+        player.hits += 1
+        player.enemies_alive -= 1
 
         if self.plan == Plan.BEAM_ACTION:
             Game.instance.get_first_sprite_by_ent_type(EntityType.BEAM).visible = False
             Game.instance.sfx_stop(SOUND_BEAM)
             Game.instance.sfx_stop(SOUND_BEAM_CAPTURED)
             Game.instance.make_beam = BeamState.OFF
-            Game.instance.player().ships[0].sprite.angle = 0
-            Game.instance.player().capture_state = CaptureState.OFF
-
-        self.plan = Plan.DEAD
-        Game.instance.sfx_play(g_kill_sound[self.entity_type])
+            player.ships[0].sprite.angle = 0
+            player.capture_state = CaptureState.OFF
 
         if self.plan == Plan.GRID:
             Game.instance.increment_score(g_score_sheet[kind][0])
         else:
             Game.instance.increment_score(g_score_sheet[kind][1])
+
+        self.plan = Plan.DEAD
+        Game.instance.sfx_play(g_kill_sound[self.entity_type])
 
         if self.attack_index >= 0:
             Game.instance.state.attackers.clear_attacker(self.attack_index)

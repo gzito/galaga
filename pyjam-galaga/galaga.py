@@ -24,7 +24,7 @@ class Galaga(Game):
         self.set_assets_root('./assets')
 
         self.go_fullscreen = False
-        self.skip_hw_startup = True
+        self.skip_hw_startup = False
 
         self.stars_svc = StarsService(self)
 
@@ -42,7 +42,7 @@ class Galaga(Game):
         self.quiescence = False
 
         # storage for all on-screen enemies[player1, player2]
-        # enemies(2,MAX_ENEMIES)
+        # declare a matrix => enemies[2][MAX_ENEMIES]
         self.enemies = [[Enemy() for y in range(MAX_ENEMIES)] for x in range(2)]
 
         # all bullets possible on-screen (18)
@@ -85,10 +85,12 @@ class Galaga(Game):
         # leaderboard
         self.leaderboard = Leaderboard()
 
+        # immediate spawn waves - use it only to accelerate testing ;)
+        self.fast_spawn = False
+
         # cheats
         self.invulnerability = False
-        self.fast_spawn = False
-        self.infinite_lives = True
+        self.infinite_lives = False
 
     def player(self):
         """
@@ -140,7 +142,7 @@ class Galaga(Game):
 
         self.set_framerate(FRAME_RATE)
 
-        pg.display.set_caption('Pyjam Galaga')
+        pg.display.set_caption('pyjam-galaga')
         self.set_bg_color(pg.Color('black'))
 
     def initialize(self):

@@ -32,25 +32,40 @@ class Attackers:
         self.__attack_delay_timer = value
 
     def clear_all(self):
+        """
+        clear all attackers slots
+        """
         for i in range(len(self.__attackers)):
             self.__attackers[i] = -1
         self.__num_attackers = 0
 
     def add_attacker(self, from_idx, position):
+        """
+        add an attacker in the first available slot starting from the index from_idx
+        """
         for i in range(from_idx, len(self.__attackers)):
             if self.__attackers[i] == -1:
                 self.set_attacker_at(i, position)
                 break
 
     def set_attacker(self, position):
+        """
+        set an attacker at the first available slot
+        """
         self.__attackers[self.__num_attackers] = position
         self.__num_attackers += 1
 
     def set_attacker_at(self, idx, position):
+        """
+        set an attacker at the given slot index
+        """
         self.__attackers[idx] = position
         self.__num_attackers += 1
 
     def clear_attacker(self, idx):
+        """
+        clear the attacker at the given slot index
+        """
         self.__attackers[idx] = -1
         self.__num_attackers -= 1
 
@@ -148,8 +163,6 @@ class PlayingState(GameState):
         elif self.substate == PlayingState.Substate.StageInit:
             if self.__state_timer < 0:
                 self.__spawner.setup_new_stage()
-                print(f'self.game.player().stage = {self.game.player().stage}')
-                print(f'self.game.player().stage_index = {self.game.player().stage_index}')
                 self.game.bullet_index = self.game.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET)
                 self.game.set_text_range_visible(TEXT_PLAYER, TEXT_PLAYER_NUM, False)
                 if self.game.player().stage_index < 3:
@@ -734,6 +747,8 @@ class PlayingState(GameState):
         if not self.game.quiescence:
             return False
 
+        self.game.make_beam = BeamState.OFF
+
         # prime the attack structure with 2 attackers, not bosses, hence start looking from 4
         self.attackers.clear_all()
         for position in gAttack_order:
@@ -790,6 +805,13 @@ class PlayingState(GameState):
                         # Exit loop as an enemy was put in a slot
                         break
 
+            # if there is the captured fighter without its captor boss, if still a slot, try to select it
+            if self.attackers.count < 2:
+                if self.game.player().captured_fighter is not None and self.game.player().get_captor_boss() is None:
+                    for position in range(0, 3):
+                        if self.game.enemy_at(position).plan == Plan.GRID:
+                            self.attackers.add_attacker(0, position)
+
             # launch any attackers that haven't launched yet
             # This is done as a second part so that the initial primed 2 non-boss
             # attackers will get launched in this way
@@ -812,6 +834,9 @@ class PlayingState(GameState):
                             else:
                                 # Put the BOSS and his cargo on their plan here
                                 enemy.next_plan = Plan.PATH
+                        # captured fighter without captor noss => as not cargo
+                        elif kind == EntityType.CAPTURED_FIGHTER:
+                            enemy.next_plan = Plan.DIVE_AWAY
                         else:
                             enemy.next_plan = Plan.PATH
 
@@ -822,7 +847,8 @@ class PlayingState(GameState):
                         self.game.sfx_stop(SOUND_DIVE_ATTACK)
                         self.game.sfx_play(SOUND_DIVE_ATTACK)
                         self.attackers.set_delay_timer(ATTACK_DELAY_TIME)
-                        # if one of the 1st 2 and not a boss, launch only 1 - boss may have cargo later in array
+                        # if one of the first two in the slots and it isn't a boss, launch only 1
+                        # boss may have cargo later in array
                         if not (cargo or a_boss):
                             break
 

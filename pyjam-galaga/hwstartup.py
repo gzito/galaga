@@ -42,7 +42,7 @@ class HwStartupState(GameState):
         self.__flipflop = 0
         self.__stage = 0
         self.__xp = 0
-        # tiles[ORIGINAL_Y_CELLS][ORIGINAL_X_CELLS], a matrix of Tile
+        # tiles[ORIGINAL_Y_CELLS][ORIGINAL_X_CELLS], a matrix of Tile objects
         self.__tiles = [[Tile() for x in range(ORIGINAL_X_CELLS)] for y in range(ORIGINAL_Y_CELLS)]
         self.__memcheck_timer = 0.0
 
@@ -126,6 +126,7 @@ class HwStartupState(GameState):
                     self.__tiles[y][x].sprite.size = pc2v(glm.vec2(4, 3.0))
                     self.__tiles[y][x].sprite.position = pc2v(glm.vec2(x * (100.0 / ORIGINAL_X_CELLS),
                                                                        y * (100.0 / ORIGINAL_Y_CELLS)))
+                    self.__tiles[y][x].sprite.hotspot = glm.vec2(0, 0)
 
                     self.game.sprites.append(self.__tiles[y][x].sprite)
 
@@ -138,7 +139,7 @@ class HwStartupState(GameState):
             self.__scratch1 = 1
         elif self.__scratch1 > 0:
             self.__state_timer += self.game.delta_time
-            if self.__state_timer < 8.0:
+            if self.__state_timer < 9.0:
                 self.__memcheck_timer += self.game.delta_time
                 # wait 50 ms
                 if self.__memcheck_timer < 0.05:
@@ -168,11 +169,11 @@ class HwStartupState(GameState):
                 self.substate = HwStartupState.Substate.RAM_OK
 
         # Tick stages over
-        if 2.0 < self.__state_timer <= 4.0:
+        if 3.0 < self.__state_timer <= 5.0:
             self.__stage = 2
-        elif 4.0 < self.__state_timer <= 6.0:
+        elif 5.0 < self.__state_timer <= 7.0:
             self.__stage = 3
-        elif self.__state_timer > 6.0:
+        elif self.__state_timer > 7.0:
             self.__stage = 4
 
     def ram_ok(self):
@@ -231,14 +232,14 @@ class HwStartupState(GameState):
             for y in range(ORIGINAL_Y_CELLS//2 + 1):
                 p0 = y * (99.6/(ORIGINAL_Y_CELLSF/2))
                 p1 = p0 + 0.4
-                for y1 in np.arange(p0,p1+sh, sh):
-                    primitives2d.draw_line(self.sp_batch, 0.0, pcy2vy(y1), pcx2vx(100.0), pcy2vy(y1), texture, 1.0)
+                for y1 in np.arange(p0, p1+sh, sh):
+                    primitives2d.draw_line(self.sp_batch, 0.0, pcy2vy(y1), pcx2vx(100.0), pcy2vy(y1), texture, 1)
 
             for x in range(ORIGINAL_X_CELLS//2 + 1):
                 p0 = x * (99.6/(ORIGINAL_X_CELLSF/2))
                 p1 = p0 + 0.4
-                for x1 in np.arange(p0,p1+sw, sw):
-                    primitives2d.draw_line(self.sp_batch, pcx2vx(x1), 0.0, pcx2vx(x1), pcy2vy(100.0), texture, 1.0)
+                for x1 in np.arange(p0, p1+sw, sw):
+                    primitives2d.draw_line(self.sp_batch, pcx2vx(x1), 0.0, pcx2vx(x1), pcy2vy(100.0), texture, 1)
             self.sp_batch.end()
 
             self.__state_timer += self.game.delta_time
