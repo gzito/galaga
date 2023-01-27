@@ -39,6 +39,13 @@ You can find the library code into **pyjam** folder.
 
 ![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-2.jpg?raw=true)
 
+## pybox2d prerequisite
+pyjam requires [pybox2d](https://github.com/pybox2d/pybox2d) 2.3.10  
+Box2D 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9 or 3.10 and no source code.  
+If using Python 3.9+ please follow instructions [here](https://github.com/pybox2d/pybox2d/blob/master/INSTALL.md).
+Note that [swig](https://www.swig.org/) is required to build it. 
+
+
 ## pyjam-galaga current status
 For several pieces of Stefan's code I merely ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to pyjam.
