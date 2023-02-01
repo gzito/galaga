@@ -1,21 +1,21 @@
-# Algoritmo attackers
+# Attackers algorithm
 # -------------------
-# - Massimo 2 nemici alla volta, incluso un boss con il suo carico (in questo caso si conta come 1 slot)
-# - Se un boss ha il suo carico si seleziona e non si lanciano altri nemici
-# - Un carico consiste in un boss con al massimo 2 farfalle + il fighter catturato
-# - Finchè ci sono almeno 2 boss vengono scelti sempre boss alternandoli
-# - Nella scelta dei boss, si da sempre la precedenza ai boss con più carico
-# - Un boss alla volta, ma mentre un boss fa il raggio (ed è l'unico slot attivo, quindi se c'è un altro slot libero)
-#       è lecito lanciare un altro boss con il suo carico
-# - Se mentre un boss attacca perde TUTTO il suo carico, si lancia un altro nemico dagli attackers
-# - Per poter lanciare un raggio devono essere presenti almeno 2 boss. Se resta un unico boss, non fà più il raggio
-# - Se resta solo l'ultimo boss, vengono alternati il boss e 2 attackers semplici
+# - Max two attacker slots at once, included a boss with its cargo (in this case they counts as 1 slot)
+# - If a boss has its cargo it will be selected and no other enemies are launched
+# - A cargo consists in a boss with a maximum of 2 butterflies, plus the captured fighter
+# - While there are at least 2 alive bosses they will be chosen one by one with a round-robin selection
+# - Boss selection should favor the ones having more cargo
+# - A boss at once with one exception: while a boss make the beam, another boss with its cargo can be selected
+# - If an attacker boss lose all its cargo, other kind of enemy can be selected from attackers
+# - The beam will be done with at least 2 alive bosses. Only 1 boss alive will not emit beam anymore.
+# - If the last boss keeps alive, that boss and 2 simple attackers will alternate
 
 # -----------------
 # TODO
-# [ ] Design and implement path for bosses
-# [ ] Fix attack system
-# [ ] Ehnance and fix cargo behavior
+# [X] Design and implement path for bosses
+# [ ] Fix and tune attack algorithm
+# [X] Ehnance and fix cargo behavior
 # [ ] Implement differentiated score for bosses, challenge waves, etc. and its visualization
 # [ ] Handle other kind of enemies: Scorpion, Bosconian, Dragonfly, Mosquito
-# .................
+# [ ] Design and implement other challenge stages
+# -----------------

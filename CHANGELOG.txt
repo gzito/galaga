@@ -1,0 +1,8 @@
+## 01-Feb-2023
+# Implemented movement pattern for boss
+# Enhanced cargo feature
+# Enhanced and fix Attacker service
+# Refactored a lot of classes
+
+## 27-Jan-2023
+# First release

@@ -171,7 +171,7 @@ class PlayingState(GameState):
                 self.game.stars_svc.speed = STAR_MAX_SPEED
                 self.substate = PlayingState.Substate.Play
                 self.game.attack_svc.bugs_attack = False
-                self.game.attack_svc.clear_all_attackers()
+                self.game.attack_svc.attackers.clear_all()
         # Play
         elif self.substate == PlayingState.Substate.Play:
             # Test for end of stage - all clear - condition

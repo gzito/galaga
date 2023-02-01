@@ -39,12 +39,34 @@ You can find the library code into **pyjam** folder.
 
 ![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-2.jpg?raw=true)
 
+## Dependencies
+[glcontext](https://github.com/moderngl/glcontext)  
+[moderngl](https://github.com/moderngl/moderngl)  
+[numpy](https://github.com/numpy/numpy)  
+[Pillow](https://github.com/python-pillow/Pillow)  
+[pybox2d](https://github.com/pybox2d/pybox2d)  
+[pygame](https://github.com/pygame/pygame)  
+[PyGLM](https://github.com/Zuzu-Typ/PyGLM)   
+
 ## pybox2d prerequisite
 pyjam requires [pybox2d](https://github.com/pybox2d/pybox2d) 2.3.10  
 pybox2d 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9 or 3.10.  
 If using Python 3.9+ please follow build & install instructions [here](https://github.com/pybox2d/pybox2d/blob/master/INSTALL.md).
-Note that [swig](https://www.swig.org/) and C++ compiler is required to build it. 
+Note that [swig](https://www.swig.org/) and a C++ compiler is required to build it. 
 
+## Installation
+cd into the root folder and run:  
+*pip install -r requirements.txt*
+
+To play Galaga, cd into pyjam-galaga subfolder and run *main.py*.  
+
+## pyjam-galaga keys  
+**Enter:** insert coin  
+**1 / 2:** start one or two player(s) match  
+**Left/right cursor keys:** move the ship  
+**Ctrl:** fire  
+**Esc:** Exit the game  
+**F1:** show/hide FPS indicator  
 
 ## pyjam-galaga current status
 For several pieces of Stefan's code I merely ported them as they are to Python language.
@@ -77,19 +99,6 @@ e) Once a highscore is made, the leaderboard is saved in the user home folder an
 
 f) Python code is not as clean as I would like, there is still a lot of work to be done.
 
-To play Galaga, cd into pyjam-galaga subfolder and run main.py.  
-
-## pyjam-galaga keys  
-**Enter:** insert coin  
-**1 / 2:** start one or two player(s) match  
-**Left/right cursor keys:** move the ship  
-**Ctrl:** fire  
-**Esc:** Exit the game  
-**F1:** show/hide FPS indicator  
-
 ## Acknowledgements
 [Stefan Wessels](https://github.com/StewBC)  
-[moderngl](https://github.com/moderngl/moderngl)  
-[PyGLM](https://github.com/Zuzu-Typ/PyGLM) and [glm](https://github.com/g-truc/glm)   
-[MonoGame](https://github.com/MonoGame/MonoGame)  
-[pygame](https://github.com/pygame/pygame)  
+The [MonoGame](https://github.com/MonoGame/MonoGame) team 
