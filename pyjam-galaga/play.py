@@ -1,78 +1,15 @@
-import copy
-
-import glm
-
-from spawn import EnemySpawner
-from galaga_data import *
-from pyjam.application import GameState, pc2v, vx2pcx, pcx2vx, vy2pcy, pcy2vy
-
-
-class Attackers:
-    def __init__(self):
-        # -1 = empty or # is grid-position
-        self.__attackers = [-1, -1, -1, -1]
-        self.__num_attackers = 0
-        self.__attack_delay_timer = 0.0
-
-    @property
-    def count(self):
-        return self.__num_attackers
-
-    def get_at(self, idx):
-        return self.__attackers[idx]
-
-    @property
-    def delay_timer(self):
-        return self.__attack_delay_timer
-
-    def decr_delay_timer(self, delta_time):
-        self.__attack_delay_timer -= delta_time
-
-    def set_delay_timer(self, value):
-        self.__attack_delay_timer = value
-
-    def clear_all(self):
-        """
-        clear all attackers slots
-        """
-        for i in range(len(self.__attackers)):
-            self.__attackers[i] = -1
-        self.__num_attackers = 0
-
-    def add_attacker(self, from_idx, position):
-        """
-        add an attacker in the first available slot starting from the index from_idx
-        """
-        for i in range(from_idx, len(self.__attackers)):
-            if self.__attackers[i] == -1:
-                self.set_attacker_at(i, position)
-                break
-
-    def set_attacker(self, position):
-        """
-        set an attacker at the first available slot
-        """
-        self.__attackers[self.__num_attackers] = position
-        self.__num_attackers += 1
-
-    def set_attacker_at(self, idx, position):
-        """
-        set an attacker at the given slot index
-        """
-        self.__attackers[idx] = position
-        self.__num_attackers += 1
-
-    def clear_attacker(self, idx):
-        """
-        clear the attacker at the given slot index
-        """
-        self.__attackers[idx] = -1
-        self.__num_attackers -= 1
-
-
 # ===================================================================================================
 # PlayingState
 # ===================================================================================================
+import copy
+import glm
+
+from pyjam.application import GameState, pc2v, pcx2vx, pcy2vy, vx2pcx, vy2pcy
+from spawn import EnemySpawner
+from galaga_data import *
+from attack import AttackService
+
+
 class PlayingState(GameState):
     class Substate(IntEnum):
         InitGame = 1,
@@ -95,17 +32,18 @@ class PlayingState(GameState):
         HighScore = 18,
         HoldHighScore = 19
 
-    def __init__(self, game, substate):
+    def __init__(self, game, substate=None):
         super().__init__(game)
 
         self.__state_timer = 0.0
         self.__spawner = None
-        self.__substate = substate
+        if substate is None:
+            self.__substate = PlayingState.Substate.InitGame
+        else:
+            self.__substate = substate
         self.__scratch1 = 0
         self.__scratch2 = 0
         self.__game_over = False
-        self.__attackers = Attackers()
-        self.__bugs_attack = False
 
     @property
     def substate(self):
@@ -122,14 +60,6 @@ class PlayingState(GameState):
     def spawner(self):
         return self.__spawner
 
-    @property
-    def bugs_attack(self) -> bool:
-        return self.__bugs_attack
-
-    @property
-    def attackers(self):
-        return self.__attackers
-
     def is_game_over(self):
         return self.__game_over
 
@@ -138,7 +68,7 @@ class PlayingState(GameState):
 
     def update(self):
         self.handle_player()
-        self.move_bullets()
+        self.game.move_bullets()
         self.update_enemies()
         self.game.fx_svc.update(self.game.delta_time)
 
@@ -240,8 +170,8 @@ class PlayingState(GameState):
                 self.game.set_text_range_visible(TEXT_PLAYER, TEXT_READY, False)
                 self.game.stars_svc.speed = STAR_MAX_SPEED
                 self.substate = PlayingState.Substate.Play
-                self.__bugs_attack = False
-                self.attackers.clear_all()
+                self.game.attack_svc.bugs_attack = False
+                self.game.attack_svc.clear_all_attackers()
         # Play
         elif self.substate == PlayingState.Substate.Play:
             # Test for end of stage - all clear - condition
@@ -257,10 +187,10 @@ class PlayingState(GameState):
             if self.game.player().ships[0].plan != Plan.DEAD:
                 if self.game.player().spawn_active:
                     self.__spawner.run()
-                if not self.__bugs_attack:
-                    self.__bugs_attack = self.attack_ready()
-                if self.__bugs_attack:
-                    self.choose_attacker()
+                if not self.game.attack_svc.bugs_attack:
+                    self.game.attack_svc.bugs_attack = self.game.attack_svc.attack_ready()
+                if self.game.attack_svc.bugs_attack:
+                    self.game.attack_svc.choose_attacker()
             elif self.game.player().ships[1].plan != Plan.ALIVE:
                 self.substate = PlayingState.Substate.PlayerDied
         # StageClear
@@ -426,9 +356,9 @@ class PlayingState(GameState):
                     while lb.edit_score >= 0:
                         # Move old scores to make room for new entry
                         if lb.entry.score > lb.high_scores[lb.edit_score].score:
-                            self.game.texts[TEXT_SCORE_1 + lb.edit_score + 1].text =\
+                            self.game.texts[TEXT_SCORE_1 + lb.edit_score + 1].text = \
                                 self.game.texts[TEXT_SCORE_1 + lb.edit_score].text
-                            self.game.texts[TEXT_N_N + lb.edit_score + 1].text =\
+                            self.game.texts[TEXT_N_N + lb.edit_score + 1].text = \
                                 self.game.texts[TEXT_N_N + lb.edit_score].text
                             lb.edit_score -= 1
                         else:
@@ -487,13 +417,13 @@ class PlayingState(GameState):
                     else:
                         letter += 1
 
-                lb.entry.name = lb.entry.name[0:lb.edit_letter] + chr(letter) + lb.entry.name[lb.edit_letter+1:]
+                lb.entry.name = lb.entry.name[0:lb.edit_letter] + chr(letter) + lb.entry.name[lb.edit_letter + 1:]
                 self.game.texts[TEXT_INITALS_INITIALS].text = lb.entry.name
 
             # On fire, lock in an initial - 3 locked in ends the sequence
             if self.game.fire:
                 self.game.texts[TEXT_INITALS_INITIALS].set_char_color(lb.edit_letter, COLOR_RED)
-                self.game.texts[TEXT_N_N + lb.edit_score].text = lb.entry.name[0:lb.edit_letter+1]
+                self.game.texts[TEXT_N_N + lb.edit_score].text = lb.entry.name[0:lb.edit_letter + 1]
                 lb.edit_letter += 1
                 if lb.edit_letter > 2:
                     lb.high_scores[lb.edit_score].name = lb.entry.name
@@ -664,36 +594,6 @@ class PlayingState(GameState):
                                                     self.game.bullets[b_point_index].y))
                     sprite.visible = True
 
-    def move_bullets(self):
-        for bullet in self.game.bullets:
-            if bullet.plan == Plan.ALIVE:
-                sprite = bullet.sprite
-                if bullet.entity_type == EntityType.BLUE_BULLET:
-                    # TODO: Player bullets only travel in astraight line but
-                    #   when the player is being beamed, the bullets can go at an
-                    #   angle - add support for that
-                    bullet.y -= BULLET_SPEED * self.game.delta_time
-                    if bullet.y < (1 / ORIGINAL_Y_CELLSF) * 100:
-                        bullet.plan = Plan.DEAD
-                        sprite.visible = False
-                else:
-                    tx = self.game.delta_time * bullet.velocity.x
-                    ty = self.game.delta_time * bullet.velocity.y
-
-                    # update the position
-                    bullet.x -= tx
-                    bullet.y -= ty
-
-                    if bullet.y > ((ORIGINAL_Y_CELLSF - 2) / ORIGINAL_Y_CELLSF) * 100.0:
-                        bullet.plan = Plan.DEAD
-                        bullet.sprite.visible = False
-                    else:
-                        if self.game.player().was_hit(sprite):
-                            bullet.plan = Plan.DEAD
-                            sprite.visible = False
-
-                sprite.position = pc2v(glm.vec2(bullet.x, bullet.y))
-
     def update_enemies(self):
         if PlayingState.Substate.PlayerInit <= self.__substate <= PlayingState.Substate.ShowField:
             self.game.player().grid.update(self.game.delta_time)
@@ -739,266 +639,3 @@ class PlayingState(GameState):
                 sprite.position = pc2v(glm.vec2(x, 100.0 - vy2pcy(sprite.height)))
                 sprite.hotspot = glm.vec2(0, 0)
                 icons.append(sprite)
-
-    # try to select al least 2 attackers
-    def attack_ready(self) -> bool:
-        if self.game.player().spawn_active:
-            return False
-        if not self.game.quiescence:
-            return False
-
-        self.game.make_beam = BeamState.OFF
-
-        # prime the attack structure with 2 attackers, not bosses, hence start looking from 4
-        self.attackers.clear_all()
-        for position in gAttack_order:
-            if self.attackers.count < 2:
-                if self.game.enemy_at(position).plan == Plan.GRID:
-                    self.attackers.set_attacker(position)
-            else:
-                break
-
-        return True
-
-    def choose_attacker(self):
-        # while the capture sequence is active, disable attackers
-        if self.game.player().capture_state != CaptureState.OFF and self.game.player().capture_state != CaptureState.READY:
-            return
-
-        self.attackers.decr_delay_timer(self.game.delta_time)
-
-        if self.attackers.delay_timer < 0.0:
-            # only allow 2 at a time
-            if self.attackers.count < 2:
-                # try to pick a boss
-                for position in range(4, 8):
-                    if self.game.enemy_at(position).plan == Plan.GRID:
-                        self.attackers.add_attacker(0, position)
-
-                        # See if this boss should go make a beam
-                        if self.game.make_beam == BeamState.OFF and self.game.player().captured_fighter is None:
-                            if self.game.player().enemies_alive > 5 and self.game.player().ships[1].plan != Plan.ALIVE:
-                                self.game.make_beam = BeamState.BOSS_SELECTED
-                        else:
-                            # See if there's cargo to take and set those ships up on a launch plan as well
-                            loaded = 0
-
-                            if self.game.enemy_at(position).is_captor():
-                                loaded += 1
-                                self.attackers.add_attacker(2, self.game.player().captured_fighter.position_index)
-
-                            for i in range(3):
-                                if self.game.enemy_at(position + 5 + i).plan == Plan.GRID:
-                                    loaded += 1
-                                    self.attackers.add_attacker(2, position + 5 + i)
-                                if loaded == 2:
-                                    break
-                        # a boss added so stop looking
-                        break
-
-            # after boss pick, if still a slot, try to pick a bee or butterfly
-            if self.attackers.count < 2:
-                for position in gAttack_order:
-                    # if idle
-                    if self.game.enemy_at(position).plan == Plan.GRID:
-                        self.attackers.add_attacker(0, position)
-                        # Exit loop as an enemy was put in a slot
-                        break
-
-            # if there is the captured fighter without its captor boss, if still a slot, try to select it
-            if self.attackers.count < 2:
-                if self.game.player().captured_fighter is not None and self.game.player().get_captor_boss() is None:
-                    for position in range(0, 3):
-                        if self.game.enemy_at(position).plan == Plan.GRID:
-                            self.attackers.add_attacker(0, position)
-
-            # launch any attackers that haven't launched yet
-            # This is done as a second part so that the initial primed 2 non-boss
-            # attackers will get launched in this way
-            for i in range(self.attackers.count):
-                position = self.attackers.get_at(i)
-                if position != -1:
-                    # is this enemy idle or has it launched
-                    enemy = self.game.enemy_at(position)
-                    if enemy.plan == Plan.GRID:
-                        # Make it launch if it was still idle
-                        kind = enemy.entity_type
-                        a_boss = (kind == EntityType.BOSS_GREEN) or (kind == EntityType.BOSS_BLUE)
-                        cargo = (i >= 2)
-
-                        if a_boss or cargo:
-                            if self.game.make_beam == BeamState.BOSS_SELECTED:
-                                self.game.make_beam += 1
-                                # Put the make a beam action in here
-                                enemy.next_plan = Plan.GOTO_BEAM
-                            else:
-                                # Put the BOSS and his cargo on their plan here
-                                enemy.next_plan = Plan.PATH
-                        # captured fighter without captor noss => as not cargo
-                        elif kind == EntityType.CAPTURED_FIGHTER:
-                            enemy.next_plan = Plan.DIVE_AWAY
-                        else:
-                            enemy.next_plan = Plan.PATH
-
-                        enemy.plan = Plan.PATH
-                        enemy.path_index = PATH_LAUNCH + gMirror[enemy.position_index]
-                        enemy.attack_index = i
-                        enemy.next_path_point()
-                        self.game.sfx_stop(SOUND_DIVE_ATTACK)
-                        self.game.sfx_play(SOUND_DIVE_ATTACK)
-                        self.attackers.set_delay_timer(ATTACK_DELAY_TIME)
-                        # if one of the first two in the slots and it isn't a boss, launch only 1
-                        # boss may have cargo later in array
-                        if not (cargo or a_boss):
-                            break
-
-
-class AttractState(GameState):
-    class Substate(IntEnum):
-        TITLE = 1,
-        SHOW_VALUES = 2,
-        SHOW_COPYRIGHT = 3,
-        SHOW_PLAY = 4,
-        SHOW_SCORES = 5,
-        HAVE_CREDIT = 6
-
-    def __init__(self, game, substate):
-        super().__init__(game)
-        self.__game = game
-        self.__state_timer = 0.0
-        self.__spawner = None
-        self.__substate = substate
-        self.__scratch1 = 0
-
-    @property
-    def substate(self):
-        return self.__substate
-
-    @substate.setter
-    def substate(self, new_state):
-        self.__substate = new_state
-        self.__scratch1 = 0
-        self.__state_timer = 0.0
-
-    def enter(self):
-        # Show 1UP, HIGH SCORE and initial high score
-        self.__game.set_text_range_visible(TEXT_1UP, TEXT_20000, True)
-        self.__game.stars_svc.enable()
-
-    def update(self):
-        self.do_attract_sequence()
-        if (self.game.start == 1 and self.game.num_credits) or (self.game.start == 2 and self.game.num_credits > 1):
-            self.game.num_players = self.game.start
-            self.game.use_credits()
-            self.game.set_text_range_visible(TEXT_GALAGA, TEXT_END_GAME_TEXT, False)
-            self.game.set_sprite_range_visible(0, len(self.game.sprites) - 1, False)
-            self.game.change_state(PlayingState(self.game, PlayingState.Substate.InitGame))
-
-    def do_attract_sequence(self):
-        self.__state_timer -= self.__game.delta_time
-
-        if self.__substate == AttractState.Substate.TITLE:
-            if self.__state_timer <= 0.0:
-                self.__state_timer = TIME_TO_REVEAL
-                self.__scratch1 += 1
-                if not self.do_attract_title():
-                    self.substate = AttractState.Substate.SHOW_VALUES
-        elif self.__substate == AttractState.Substate.SHOW_VALUES:
-            sprite = self.game.get_first_sprite_by_ent_type(EntityType.FIGHTER)
-            sprite.position = pc2v(glm.vec2(50, ((ORIGINAL_Y_CELLSF - 3.0) / ORIGINAL_Y_CELLSF) * 100.0))
-            sprite.visible = True
-            self.substate = AttractState.Substate.SHOW_COPYRIGHT
-        elif self.__substate == AttractState.Substate.SHOW_COPYRIGHT:
-            if self.__scratch1 == 0:
-                self.game.get_first_sprite_by_ent_type(EntityType.FIGHTER).visible = False
-                self.game.get_first_sprite_by_ent_type(EntityType.NAMCO).visible = True
-                self.game.texts[TEXT_COPYRIGHT].visible = True
-                self.__state_timer = HOLD_COPYRIGHT
-                self.__scratch1 = 1
-
-            if self.__scratch1 == 1 and self.__state_timer < 0.0:
-                self.game.set_sprite_range_visible(0, len(self.game.sprites) - 1, False)
-                self.game.set_text_range_visible(TEXT_GALAGA, TEXT_COPYRIGHT, False)
-                self.substate = AttractState.Substate.SHOW_PLAY
-        elif self.__substate == AttractState.Substate.SHOW_PLAY:
-            if self.__scratch1 == 0:
-                self.game.texts[TEXT_FIGHTER_CAPTURED].visible = True
-                self.__state_timer = HOLD_COPYRIGHT
-                self.__scratch1 = 1
-
-            if self.__scratch1 == 1 and self.__state_timer < 0.0:
-                self.game.texts[TEXT_FIGHTER_CAPTURED].visible = False
-                self.game.texts[TEXT_GAME_OVER].visible = True
-                self.__state_timer = HOLD_HIGHSCORE - HOLD_COPYRIGHT
-                self.__scratch1 = 2
-
-            if self.__scratch1 == 2 and self.__state_timer < 0.0:
-                self.game.texts[TEXT_GAME_OVER].visible = False
-                self.substate = AttractState.Substate.SHOW_SCORES
-        elif self.__substate == AttractState.Substate.SHOW_SCORES:
-            if self.__scratch1 == 0:
-                self.game.set_text_range_visible(TEXT_HEROES, TEXT_O_O, True)
-                self.__state_timer = HOLD_HIGHSCORE
-                self.__scratch1 = 1
-
-            if self.__scratch1 == 1 and self.__state_timer < 0.0:
-                self.game.set_text_range_visible(TEXT_HEROES, TEXT_O_O, False)
-                self.substate = AttractState.Substate.TITLE
-        elif self.__substate == AttractState.Substate.HAVE_CREDIT:
-            self.do_attract_credits_in()
-
-    def do_attract_title(self):
-        if self.__scratch1 == 1:
-            self.game.set_text_range_visible(TEXT_CREDIT, TEXT_0, True)
-        elif self.__scratch1 - 1 <= TEXT_2UP - TEXT_GALAGA:
-            self.game.texts[TEXT_GALAGA - 2 + self.__scratch1].visible = True
-
-        if self.__scratch1 == 4:
-            sprite = self.game.get_first_sprite_by_ent_type(EntityType.BEE)
-            sprite.position = pc2v(glm.vec2(26.5, 28.5))
-            sprite.angle = 0
-            sprite.visible = True
-        elif self.__scratch1 == 5:
-            sprite = self.game.get_first_sprite_by_ent_type(EntityType.BUTTERFLY)
-            sprite.position = pc2v(glm.vec2(26.5, 34.5))
-            sprite.angle = 0
-            sprite.visible = True
-        elif self.__scratch1 == 6:
-            sprite = self.game.get_first_sprite_by_ent_type(EntityType.BOSS_GREEN)
-            sprite.position = pc2v(glm.vec2(50.0, 45))
-            sprite.angle = 0
-            sprite.visible = True
-        elif self.__scratch1 == 7:
-            for i in range(1, 5):
-                sprite = self.game.get_sprite_at_by_ent_type(EntityType.BOSS_GREEN, i)
-                sprite.position = pc2v(glm.vec2(i * (100.0 / 5.0), 52))
-                sprite.angle = 0
-                sprite.visible = True
-        elif self.__scratch1 == 8:
-            pos = [10.0, 11.0, 13.0]
-            for i in range(1, 4):
-                sprite = self.game.get_sprite_at_by_ent_type(EntityType.BUTTERFLY, i)
-                sprite.position = pc2v(glm.vec2(pos[i - 1] * (100.0 / 15.0), 57.0))
-                sprite.angle = 0
-                sprite.visible = True
-        elif self.__scratch1 == 9:
-            return 0
-
-        return 1
-
-    def do_attract_credits_in(self):
-        if not self.__scratch1:
-            self.game.set_sprite_range_visible(0, self.game.ent_svc.get_sprite_offset(EntityType.RED_BULLET), False)
-            self.game.set_text_range_visible(TEXT_GALAGA, TEXT_END_GAME_TEXT, False)
-            self.game.set_text_range_visible(TEXT_PUSH_START, TEXT_FOR_BONUS, True)
-            self.game.set_text_range_visible(TEXT_COPYRIGHT, TEXT_COPYRIGHT, True)
-            for i in range(1, 4):
-                sprite = self.game.get_sprite_at_by_ent_type(EntityType.FIGHTER, i)
-                sx = self.game.texts[TEXT_1BONUS_FOR + i - 1].position.x
-                sprite.scale = glm.vec2(1.0, 1.0)
-                sx -= sprite.width
-                syd = self.game.texts[TEXT_1BONUS_FOR + i - 1].size.y / 2.0
-                sprite.position = glm.vec2(sx, self.game.texts[TEXT_1BONUS_FOR + i - 1].position.y + syd)
-                sprite.visible = True
-
-            self.__scratch1 += 1
