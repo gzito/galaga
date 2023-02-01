@@ -133,12 +133,12 @@ class JamSpritesState(application.GameState):
             self.create_sprite()
         elif self.game.key_down(pg.K_MINUS) and len(self.game.sprites) > 4:
             self.game.sprites.pop()
-        elif self.game.key_press(pg.K_s):
+        elif self.game.key_pressed(pg.K_s):
             self.sort_mode_idx = utils.wrap(self.sort_mode_idx + 1, 0, len(SpriteSortMode) - 1)
             self.game.set_sprite_batch_sort_mode(SpriteSortMode(self.sort_mode_idx))
-        elif self.game.key_press(pg.K_h):
+        elif self.game.key_pressed(pg.K_h):
             self.text_help.visible = not self.text_help.visible
-        elif self.game.key_press(pg.K_ESCAPE):
+        elif self.game.key_pressed(pg.K_ESCAPE):
             self.game.signal_quit()
 
     def update(self):

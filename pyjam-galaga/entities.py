@@ -9,10 +9,27 @@ from pyjam.core import Bounds
 from pyjam.utils import *
 
 
+# factory method
+def create_entity(kind):
+    if kind == EntityType.CAPTURED_FIGHTER:
+        entity = CapturedFighter()
+    elif EntityType.ENTERPRISE <= kind <= EntityType.MOSQUITO:
+        entity = Enemy()
+    elif kind == EntityType.RED_BULLET or kind == EntityType.BLUE_BULLET:
+        entity = Bullet()
+    else:
+        entity = Entity()
+
+    entity.kind = kind
+    entity.sprite = Game.instance.get_first_free_sprite_by_ent_type(kind, Game.instance.current_player_idx)
+
+    return entity
+
+
 class Entity:
     def __init__(self):
         # the type of entity
-        self.entity_type = None
+        self.kind = None
 
         # sprite object
         self.sprite = None
@@ -27,7 +44,10 @@ class Entity:
         self.next_plan = 0
 
         # index into PlayGameState.attackers when attacking
-        self.attack_index = 0
+        self.attack_index = -1
+
+        # index into PlayGameState.cargo when attacking
+        self.cargo_index = -1
 
         # entity position
         self.x = 0.0
@@ -315,7 +335,7 @@ class Player:
                 Game.instance.sfx_stop(SOUND_BEAM_CAPTURED)
                 ship_0 = self.ships[0]
                 captured_entity = CapturedFighter()
-                captured_entity.entity_type = EntityType.CAPTURED_FIGHTER
+                captured_entity.kind = EntityType.CAPTURED_FIGHTER
                 captured_entity.x = ship_0.x
                 captured_entity.y = ship_0.y
                 captured_entity.rotation = ship_0.rotation
@@ -325,6 +345,7 @@ class Player:
                 captured_entity.sprite.visible = True
                 captured_entity.plan = Plan.ALIVE
                 captured_entity.attack_index = -1
+                captured_entity.cargo_index = -1
                 self.captured_fighter = captured_entity
                 boss_entity = self.get_captor_boss()
                 # sets the captured fighter position in the grid, one row just above the captor boss
@@ -380,7 +401,7 @@ class Player:
             self.ships[0].timer -= Game.instance.delta_time
             if self.ships[0].timer < 0.0:
                 Game.instance.texts[TEXT_READY].visible = False
-                Game.instance.state.attackers.clear_all()
+                Game.instance.attack_svc.clear_all()
                 self.capture_state += 1
         # READY
         elif self.capture_state == CaptureState.READY:
@@ -397,8 +418,7 @@ class Player:
             ship_1.plan = Plan.ALIVE
             cap_fighter.sprite.visible = False
 
-            Game.instance.state.attackers.clear_attacker(cap_fighter.attack_index)
-            cap_fighter.attack_index = -1
+            cap_fighter.clear_attack()
 
             self.captured_fighter = None
             ship_1.sprite.position = pc2v(glm.vec2(ship_1.x, ship_1.y))
@@ -460,7 +480,7 @@ class Player:
                     Game.instance.sfx_play(SOUND_BREATHING_TIME, -1)
 
                 self.__rescued_ship = None
-                Game.instance.state.attackers.clear_all()
+                Game.instance.state.attack_svc.clear_all()
                 # fighter rescued, so decrease the number of enemies
                 self.enemies_alive -= 1
                 self.capture_state = CaptureState.OFF
@@ -498,11 +518,6 @@ class Player:
         return False
 
 
-class Bullet(Entity):
-    def __init__(self):
-        super().__init__()
-
-
 class Enemy(Entity):
     next_explosion = 0
 
@@ -516,6 +531,15 @@ class Enemy(Entity):
 
     def is_captor(self) -> bool:
         return self.__is_captor
+
+    def clear_attack(self):
+        if self.attack_index != -1:
+            Game.instance.attack_svc.clear_attacker(self.attack_index)
+            self.attack_index = -1
+        self.cargo_index = -1
+
+    def is_boss(self):
+        return self.kind == EntityType.BOSS_GREEN or self.kind == EntityType.BOSS_BLUE
 
     def update(self, delta_time: float):
         if self.plan != Plan.GRID:
@@ -606,7 +630,8 @@ class Enemy(Entity):
         self.setup_velocity_and_rotation()
 
     def setup_velocity_and_rotation(self):
-        if not Game.instance.state.bugs_attack:
+        # waves come in at the same velocity but attacks speed up
+        if not Game.instance.attack_svc.bugs_attack:
             if not Game.instance.fast_spawn:
                 speed = BUG_TRAVEL_SPEED
             else:
@@ -614,6 +639,7 @@ class Enemy(Entity):
         else:
             speed = Game.instance.bug_attack_speed
 
+        # larger circles require higher velocity to come out shoulder to shoulder with the smaller inner circles
         if self.plan == Plan.PATH:
             index = self.path_index >> 1
             if index == aPath_Bottom_Double_Out:
@@ -652,9 +678,15 @@ class Enemy(Entity):
                 # keep attacking straight away
                 # TODO - I think this is actually right at the top of the screen, not here at the grid level
                 self.plan = Plan.PATH
-                if self.entity_type == EntityType.BEE:
+                # boss
+                if self.is_boss():
+                    self.path_index = PATH_BOSS_ATTACK + gMirror[self.position_index]
+                    self.next_plan = Plan.DESCEND
+                # bee
+                elif self.kind == EntityType.BEE:
                     self.path_index = PATH_BEE_ATTACK + gMirror[self.position_index]
                     self.next_plan = Plan.DESCEND
+                # butterfly
                 else:
                     self.path_index = PATH_BUTTERFLY_ATTACK + gMirror[self.position_index]
                     self.next_plan = Plan.FLUTTER
@@ -667,8 +699,7 @@ class Enemy(Entity):
         elif self.plan == Plan.ORIENT:
             # Take out of attack mode when arriving in the grid
             if self.attack_index >= 0:
-                Game.instance.state.attackers.clear_attacker(self.attack_index)
-                self.attack_index = -1
+                self.clear_attack()
 
             if self.rotation < -GRID_ORIENT_ANGLE:
                 self.rotation += GRID_ORIENT_ANGLE
@@ -677,6 +708,7 @@ class Enemy(Entity):
             else:
                 self.rotation = 0
                 self.plan = Plan.GRID
+
                 # if this enemy is the captured fighter returning to the grid => the capture sequence is COMPLETE
                 if self is Game.instance.player().captured_fighter:
                     if CaptureState.OFF < Game.instance.player().capture_state < CaptureState.CAPTURE_COMPLETE:
@@ -711,7 +743,7 @@ class Enemy(Entity):
             Game.instance.player().enemies_alive -= 1
             self.sprite.visible = False
             # if this is CapturedFighter without captor boss => reset capture state
-            if self.entity_type == EntityType.CAPTURED_FIGHTER and Game.instance.player().get_captor_boss() is None:
+            if self.kind == EntityType.CAPTURED_FIGHTER and Game.instance.player().get_captor_boss() is None:
                 Game.instance.player().captured_fighter = None
                 Game.instance.player().capture_state = CaptureState.OFF
         elif self.plan == Plan.DIVE_ATTACK:
@@ -736,9 +768,13 @@ class Enemy(Entity):
         self.plan = self.next_plan
 
         # Do some setup for the plan that follows completing a path
+        # TODO: - The DIVE_AWAY guys also have PLAN_PATH as the nextPath - Introduce a new state
         if self.plan == Plan.PATH:
             # Set enemy on an arc to face the bottom of the screen
-            if self.entity_type == EntityType.BEE:
+            if self.is_boss():
+                self.path_index = PATH_BOSS_ATTACK + gMirror[self.position_index]
+                self.next_plan = Plan.DIVE_ATTACK
+            elif self.kind == EntityType.BEE:
                 self.path_index = PATH_BEE_ATTACK + gMirror[self.position_index]
                 self.next_plan = Plan.DESCEND
             else:
@@ -769,6 +805,7 @@ class Enemy(Entity):
         elif self.plan == Plan.FLUTTER:
             self.setup_flutter_arc()
         # Start an attack dive that ends with the enemy disappearing off the bottom
+        # This is used mainly for extra enemies
         elif self.plan == Plan.DIVE_AWAY_LAUNCH:
             self.plan = Plan.PATH
             self.next_plan = Plan.DIVE_AWAY
@@ -920,11 +957,11 @@ class Enemy(Entity):
                     bullet.sprite.visible = False
 
                     # Green Commanders become blue, they don't die yet
-                    if self.entity_type == EntityType.BOSS_GREEN:
+                    if self.kind == EntityType.BOSS_GREEN:
                         # Hide the green
                         self.sprite.visible = False
                         # enable the blue
-                        self.entity_type = EntityType.BOSS_BLUE
+                        self.kind = EntityType.BOSS_BLUE
                         self.sprite = Game.instance.get_first_free_sprite_by_ent_type(EntityType.BOSS_BLUE,
                                                                                       Game.instance.current_player_idx)
                         self.sprite.position = pc2v(glm.vec2(self.x, self.y))
@@ -956,17 +993,16 @@ class Enemy(Entity):
         """
 
         player = Game.instance.player()
-        kind = self.entity_type
 
         # check if this enemy is a boss, and also is captor
-        if kind == EntityType.BOSS_BLUE and self.is_captor():
+        if self.kind == EntityType.BOSS_BLUE and self.is_captor():
             player.clear_captor_boss()
             # check that this boss is not sleeping in the grid
             if self.plan != Plan.GRID and self.plan != Plan.ORIENT:
                 player.capture_state = CaptureState.RESCUED
 
         # when destroying captured fighter adjust internal varibles
-        if kind == EntityType.CAPTURED_FIGHTER:
+        if self.kind == EntityType.CAPTURED_FIGHTER:
             player.capture_state = CaptureState.OFF
             player.captured_fighter = None
             player.clear_captor_boss()
@@ -986,15 +1022,13 @@ class Enemy(Entity):
             player.capture_state = CaptureState.OFF
 
         if self.plan == Plan.GRID:
-            Game.instance.increment_score(g_score_sheet[kind][0])
+            Game.instance.increment_score(g_score_sheet[self.kind][0])
         else:
-            Game.instance.increment_score(g_score_sheet[kind][1])
+            Game.instance.increment_score(g_score_sheet[self.kind][1])
 
         self.plan = Plan.DEAD
-        Game.instance.sfx_play(g_kill_sound[self.entity_type])
-
-        if self.attack_index >= 0:
-            Game.instance.state.attackers.clear_attacker(self.attack_index)
+        self.clear_attack()
+        Game.instance.sfx_play(g_kill_sound[self.kind])
 
         # fx_seq = RunningFxSequence()
         effect_explosion = self.create_explosion_fx()
@@ -1048,6 +1082,11 @@ class Enemy(Entity):
             Game.instance.bullet_index += 1
             if Game.instance.bullet_index >= MAX_BULLETS:
                 Game.instance.bullet_index = Game.instance.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET)
+
+
+class Bullet(Entity):
+    def __init__(self):
+        super().__init__()
 
 
 class CapturedFighter(Enemy):

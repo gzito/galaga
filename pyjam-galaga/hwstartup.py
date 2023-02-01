@@ -30,11 +30,14 @@ class HwStartupState(GameState):
         SHOW_GRID = 3,
         END_HW_STARTUP = 4
 
-    def __init__(self, game, substate):
+    def __init__(self, game, substate=None):
         super().__init__(game)
         self.__game = game
         self.__state_timer = 0.0
-        self.__substate = substate
+        if substate is None:
+            self.__substate = HwStartupState.Substate.MEM_CHECK
+        else:
+            self.__substate = substate
         self.__scratch1 = 0
         self.__font_sheet = None
 
@@ -209,7 +212,7 @@ class HwStartupState(GameState):
         elif self.__scratch1 == 4:
             self.__state_timer += self.game.delta_time
             if self.__state_timer >= 250 / 1000.0:
-                self.game.set_text_range_visible(TEXT_RAM_OK,TEXT_EVERY_BONUS, False)
+                self.game.set_text_range_visible(TEXT_RAM_OK, TEXT_EVERY_BONUS, False)
                 self.substate = HwStartupState.Substate.SHOW_GRID
 
     def show_grid(self):
@@ -229,16 +232,16 @@ class HwStartupState(GameState):
             self.sp_batch.begin(transform_matrix=self.game.get_virtual_matrix())
             texture = self.game.services[ASSET_SERVICE].get('textures/star').texture
 
-            for y in range(ORIGINAL_Y_CELLS//2 + 1):
-                p0 = y * (99.6/(ORIGINAL_Y_CELLSF/2))
+            for y in range(ORIGINAL_Y_CELLS // 2 + 1):
+                p0 = y * (99.6 / (ORIGINAL_Y_CELLSF / 2))
                 p1 = p0 + 0.4
-                for y1 in np.arange(p0, p1+sh, sh):
+                for y1 in np.arange(p0, p1 + sh, sh):
                     primitives2d.draw_line(self.sp_batch, 0.0, pcy2vy(y1), pcx2vx(100.0), pcy2vy(y1), texture, 1)
 
-            for x in range(ORIGINAL_X_CELLS//2 + 1):
-                p0 = x * (99.6/(ORIGINAL_X_CELLSF/2))
+            for x in range(ORIGINAL_X_CELLS // 2 + 1):
+                p0 = x * (99.6 / (ORIGINAL_X_CELLSF / 2))
                 p1 = p0 + 0.4
-                for x1 in np.arange(p0, p1+sw, sw):
+                for x1 in np.arange(p0, p1 + sw, sw):
                     primitives2d.draw_line(self.sp_batch, pcx2vx(x1), 0.0, pcx2vx(x1), pcy2vy(100.0), texture, 1)
             self.sp_batch.end()
 

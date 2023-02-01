@@ -65,6 +65,8 @@ class Game:
         self.__signal_quit = False
         self.__key_state_this_frame = None
         self.__key_state_prev_frame = None
+        self.__mouse_buttons_this_frame = None
+        self.__mouse_buttons_prev_frame = None
 
         Game.instance = self
 
@@ -206,6 +208,18 @@ class Game:
     @property
     def display_aspect(self):
         return self.__display_aspect
+
+    def get_viewport_x_offset(self):
+        return self.__ctx.viewport[0]
+
+    def get_viewport_y_offset(self):
+        return self.__ctx.viewport[1]
+
+    def get_viewport_width(self):
+        return self.__ctx.viewport[2]
+
+    def get_viewport_height(self):
+        return self.__ctx.viewport[3]
 
     def set_display_resolution(self, width: int, height: int, flags: int = 0, depth: int = 0, display: int = 0,
                                vsync: int = 0):
@@ -398,6 +412,8 @@ class Game:
     def __read_input(self):
         self.__key_state_prev_frame = copy.copy(self.__key_state_this_frame)
         self.__key_state_this_frame = pg.key.get_pressed()
+        self.__mouse_buttons_prev_frame = copy.copy(self.__mouse_buttons_this_frame)
+        self.__mouse_buttons_this_frame = pg.mouse.get_pressed(5)
 
     def __state_update(self):
         if self.__state is not None:
@@ -441,8 +457,17 @@ class Game:
     def key_down(self, key_int):
         return self.__key_state_this_frame[key_int]
 
-    def key_press(self, key_int):
+    def key_pressed(self, key_int):
         return self.__key_state_this_frame[key_int] and not self.__key_state_prev_frame[key_int]
+
+    def mouse_button_up(self, button_num):
+        return not self.__mouse_buttons_this_frame[button_num]
+
+    def mouse_button_down(self, button_num):
+        return self.__mouse_buttons_this_frame[button_num]
+
+    def mouse_button_pressed(self, button_num):
+        return self.__mouse_buttons_this_frame[button_num] and not self.__mouse_buttons_prev_frame[button_num]
 
     def process_events(self):
         for event in pg.event.get():
@@ -517,15 +542,48 @@ class Game:
         s = proj_mat * (view_mat * (world_mat * glm.vec4(v, 1)))
 
         vp = self.__ctx.viewport
-        vx = vp[0]
-        vy = vp[1]
-        vw = vp[2]
-        vh = vp[3]
+        vp_x = vp[0]
+        vp_y = vp[1]
+        vp_w = vp[2]
+        vp_h = vp[3]
 
-        s[0] = (((s[0] / s[3]) + 1.0) / 2) * vw + vx
-        s[1] = (((s[1] / s[3]) + 1.0) / 2) * vh + vy
+        s[0] = (((s[0] / s[3]) + 1.0) / 2) * vp_w + vp_x
+        s[1] = (((s[1] / s[3]) + 1.0) / 2) * vp_h + vp_y
         s[2] = s[2] / s[3]
         return glm.vec3(s)
+
+    def screen_to_world(self, x: int, y: int) -> glm.vec3:
+        world_mat = self.get_virtual_matrix()
+        view_mat = self.camera.get_view_matrix()
+        proj_mat = self.camera.get_projection_matrix()
+
+        vp = self.__ctx.viewport
+        vp_x = vp[0]
+        vp_y = vp[1]
+        vp_w = vp[2]
+        vp_h = vp[3]
+        win_z = 0.0
+
+        """
+        mat_proj = world_mat * view_mat * proj_mat
+        mat_inverse = glm.inverse(mat_proj)
+
+        inp = glm.vec3()
+        inp.x = (((x-vp_x)/float(vp_w)) * 2.0) - 1.0
+        inp.y = -((((y-vp_y)/float(vp_h)) * 2.0) - 1.0)
+        inp.z = 2.0 * win_z - 1.0
+
+        pos = mat_inverse * inp
+        a = inp.x * mat_inverse[0, 3] + inp.y * mat_inverse[1, 3] + inp.z * mat_inverse[2, 3] + mat_inverse[3, 3]
+        pos.x /= a
+        pos.y /= a
+        pos.z /= a
+        """
+
+        if self.is_origin_topleft():
+            y = vp_h - y
+        pos = glm.unProjectNO(glm.vec3(x, y, win_z), world_mat * view_mat, proj_mat, glm.vec4(vp_x, vp_y, vp_w, vp_h))
+        return pos
 
 
 class GameState:
@@ -568,6 +626,13 @@ def pcy2vy(py: float) -> float:
     """ Converts y from percentage system to the virtual system """
 
     return Game.instance.get_virtual_display_height() * py / 100.0
+
+
+def v2pc(coord: glm.vec2) -> glm.vec2:
+    """ Converts (x,y) from virtual system to the percentage system """
+
+    return glm.vec2(coord.x / Game.instance.get_virtual_display_width() * 100.0,
+                    coord.y / Game.instance.get_virtual_display_height() * 100.0)
 
 
 def vx2pcx(x):

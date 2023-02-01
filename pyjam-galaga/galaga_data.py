@@ -286,6 +286,7 @@ aPath_Bee_Attack = 13
 aPath_Bee_Bottom_Circle = 14
 aPath_Bee_Top_Circle = 15
 aPath_Butterfly_Attack = 16
+aPath_Boss_Attack = 17
 
 PATH_TOP_SINGLE = 0
 PATH_TOP_SINGLE_MIR = 1
@@ -321,9 +322,11 @@ PATH_BEE_TOP_CIRCLE = 30
 PATH_BEE_TOP_CIRCLE_MIR = 31
 PATH_BUTTERFLY_ATTACK = 32
 PATH_BUTTERFLY_ATTACK_MIR = 33
+PATH_BOSS_ATTACK = 34
+PATH_BOSS_ATTACK_MIR = 35
 
 gStartPath = [(0.0, 0.0) for x in range(aPath_Challenge_3_2 + 1)]
-gPathData = [list() for x in range(aPath_Butterfly_Attack + 1)]
+gPathData = [list() for x in range(aPath_Boss_Attack + 1)]
 
 gStartPath[aPath_Top_Single] = (56.14, 3.30)
 gStartPath[aPath_Top_Double_Left] = (56.27, 3.30)
@@ -394,6 +397,11 @@ gPathData[aPath_Bee_Bottom_Circle] = [(-2.34, 6.56), (-6.41, 4.80), (-8.75, 1.76
 gPathData[aPath_Bee_Top_Circle] = [(-2.34, -6.56), (-6.40, -4.80), (-8.75, -1.76), (-8.75, 1.76), (-6.40, 4.80),
                                    (-2.34, 6.56)]
 gPathData[aPath_Butterfly_Attack] = [(2.46, 2.53), (31.35, 13.80), (6.99, 6.02), (2.33, 3.31), (0.00, 4.56)]
+gPathData[aPath_Boss_Attack] = [(0, 16), (0.67, 2.50), (1.83, 1.83), (2.50, 0.67), (2.50, -0.67), (1.83, -1.83),
+                                (0.67, -2.50), (-0.67, -2.50), (-1.83, -1.83), (-2.50, -0.67), (-2.50, 0.67),
+                                (-1.83, 1.83), (-0.67, 2.50), (53.44, 32.13), (1.32, 1.34), (0.93, 1.23), (0.26, 1.96),
+                                (0.13, 7.92), (-0.79, 1.34), (-1.19, 1.23), (-1.46, 1.24), (-1.85, 0.92),
+                                (-1.58, 1.03), (-1.59, 1.13), (-1.46, 0.83), (-0.53, 1.03)]
 
 # numbers from 4 to 43 (5 waves * 8 enemies = 40 positions on the grid)
 # positions 0-3 are reserved for captured fighter
@@ -402,17 +410,17 @@ gPathData[aPath_Butterfly_Attack] = [(2.46, 2.53), (31.35, 13.80), (6.99, 6.02),
 # [wave, side, enemy position in the grid]
 # declare a 3d array with the following sizes: a[5][2][4]
 gSpawn_order = [[[0 for z in range(4)] for y in range(2)] for x in range(5)]
-gSpawn_order[0][0] = [7 + 4, 8 + 4, 15 + 4, 16 + 4]
-gSpawn_order[1][0] = [0 + 4, 1 + 4, 2 + 4, 3 + 4]
-gSpawn_order[2][0] = [10 + 4, 18 + 4, 4 + 4, 12 + 4]
-gSpawn_order[3][0] = [26 + 4, 36 + 4, 22 + 4, 32 + 4]
-gSpawn_order[4][0] = [20 + 4, 30 + 4, 28 + 4, 38 + 4]
+gSpawn_order[0][0] = [11, 12, 19, 20]
+gSpawn_order[1][0] = [4, 5, 6, 7]
+gSpawn_order[2][0] = [14, 22, 8, 16]
+gSpawn_order[3][0] = [30, 40, 26, 36]
+gSpawn_order[4][0] = [24, 34, 32, 42]
 
-gSpawn_order[0][1] = [24 + 4, 25 + 4, 34 + 4, 35 + 4]
-gSpawn_order[1][1] = [6 + 4, 9 + 4, 14 + 4, 17 + 4]
-gSpawn_order[2][1] = [11 + 4, 19 + 4, 5 + 4, 13 + 4]
-gSpawn_order[3][1] = [27 + 4, 37 + 4, 23 + 4, 33 + 4]
-gSpawn_order[4][1] = [21 + 4, 31 + 4, 29 + 4, 39 + 4]
+gSpawn_order[0][1] = [28, 29, 38, 39]
+gSpawn_order[1][1] = [10, 13, 18, 21]
+gSpawn_order[2][1] = [15, 23, 9, 17]
+gSpawn_order[3][1] = [31, 41, 27, 37]
+gSpawn_order[4][1] = [25, 35, 33, 43]
 
 # col position relative to grid
 gGrid_cols = [

@@ -168,13 +168,14 @@ class EnemySpawner:
         path[1] = gPath_indicies[current_player.stage_index][current_player.attack_wave][1]
         the_path = path[current_player.kind_index]
 
-        enemy.entity_type = kind
+        enemy.kind = kind
         enemy.sprite = self.game.get_first_free_sprite_by_ent_type(kind, self.game.current_player_idx)
         enemy.position_index = position
         enemy.plan = Plan.PATH
         enemy.next_plan = next_plan
         enemy.path_index = the_path
         enemy.attack_index = -1
+        enemy.cargo_index = -1
 
         # start position of the path
         index = the_path >> 1

@@ -4,10 +4,13 @@ from Box2D import b2PolygonShape
 
 from background import StarsService
 from fxservice import RunningFxService
+from attack import AttackService
 from entities import Enemy, Bullet, Player
 from galaga_data import *
-from galaga_states import PlayingState, AttractState
+from play import PlayingState
 from hwstartup import HwStartupState
+from attract import AttractState
+from tests import TestPath
 
 from pyjam.application import *
 from pyjam.sprite import Sprite
@@ -23,14 +26,34 @@ class Galaga(Game):
 
         self.set_assets_root('./assets')
 
+        # if True run the game in exclusive fullscreen
         self.go_fullscreen = False
-        self.skip_hw_startup = False
 
+        # if True skip the initial hardware setup sequence
+        self.skip_hw_startup = True
+
+        # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
+        self.fast_spawn = True
+
+        # -------------
+        # cheats
+        # -------------
+        # self-explanatory
+        self.invulnerability = True
+
+        # self-explanatory
+        self.infinite_lives = True
+
+        # -------------
+        # services
+        # -------------
         self.stars_svc = StarsService(self)
 
         self.ent_svc = EntitiesService()
 
         self.fx_svc = RunningFxService(self)
+
+        self.attack_svc = AttackService(self)
 
         # [player1,player2]
         self.players = [Player(), Player()]
@@ -85,13 +108,6 @@ class Galaga(Game):
         # leaderboard
         self.leaderboard = Leaderboard()
 
-        # immediate spawn waves - use it only to accelerate testing ;)
-        self.fast_spawn = False
-
-        # cheats
-        self.invulnerability = False
-        self.infinite_lives = False
-
     def player(self):
         """
         Returns the current player
@@ -115,6 +131,16 @@ class Galaga(Game):
     def get_first_free_sprite_by_ent_type(self, ent_type: EntityType, player_idx: int):
         """ returns the first free sprite for the given entity type and mark the sprite as used """
         return self.sprites[self.ent_svc.get_first_free_sprite_idx(ent_type, player_idx)]
+
+    def instantiate_state(self, state_name):
+        if state_name == 'AttractState':
+            return AttractState(self)
+        elif state_name == 'HwStartupState':
+            return HwStartupState(self)
+        elif state_name == 'PlayingState':
+            return PlayingState(self)
+        else:
+            raise AssertionError(f'Unknown state name: {state_name}')
 
     def setup_display(self):
         # Get the largest screen in aspect ratio that will fit the device
@@ -213,7 +239,7 @@ class Galaga(Game):
         for i in range(self.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET)):
             sprite = self.get_sprite_at_by_ent_type(EntityType.BLUE_BULLET, i)
             self.bullets[i].sprite = sprite
-            self.bullets[i].entity_type = EntityType.BLUE_BULLET
+            self.bullets[i].kind = EntityType.BLUE_BULLET
             self.bullets[i].plan = Plan.DEAD
 
         # set up the enemy bullets
@@ -222,7 +248,7 @@ class Galaga(Game):
             # red bullet sprites start just after the last blue bullet sprite
             bullet_idx = self.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET) + i
             self.bullets[bullet_idx].sprite = sprite
-            self.bullets[bullet_idx].entity_type = EntityType.RED_BULLET
+            self.bullets[bullet_idx].kind = EntityType.RED_BULLET
             self.bullets[bullet_idx].plan = Plan.DEAD
 
         # try to load leaderboards for filesystem
@@ -254,9 +280,9 @@ class Galaga(Game):
         self.texts.append(self.fps_text)
 
         if self.skip_hw_startup:
-            self.change_state(AttractState(self, AttractState.Substate.TITLE))
+            self.change_state(self.instantiate_state('AttractState'))
         else:
-            self.change_state(HwStartupState(self, HwStartupState.Substate.MEM_CHECK))
+            self.change_state(self.instantiate_state('HwStartupState'))
 
     @staticmethod
     def get_frames(base_frame_name, frames_count):
@@ -277,7 +303,7 @@ class Galaga(Game):
     def update(self):
         # hw-startup state
         if isinstance(self.state, HwStartupState) and self.state.substate == HwStartupState.Substate.END_HW_STARTUP:
-            self.change_state(AttractState(self, AttractState.Substate.TITLE))
+            self.change_state(self.instantiate_state('AttractState'))
         # attract or play state
         else:
             self.process_input()
@@ -290,7 +316,7 @@ class Galaga(Game):
                     self.state.substate = AttractState.Substate.HAVE_CREDIT
 
             if isinstance(self.state, PlayingState) and self.state.is_game_over():
-                self.change_state(AttractState(self, AttractState.Substate.TITLE))
+                self.change_state(self.instantiate_state('AttractState'))
                 self.set_sprite_range_visible(0, self.ent_svc.get_sprite_offset(EntityType.RED_BULLET), False)
 
         super().update()
@@ -320,23 +346,29 @@ class Galaga(Game):
         if self.key_down(pg.K_RIGHT):
             self.direction = 1
 
-        if self.key_press(pg.K_LCTRL):
+        if self.key_pressed(pg.K_LCTRL):
             self.fire = 1
 
-        if self.key_press(pg.K_RETURN):
+        if self.key_pressed(pg.K_RETURN):
             self.coin_dropped = True
 
-        if self.key_press(pg.K_1):
+        if self.key_pressed(pg.K_1):
             self.start = 1
 
-        if self.key_press(pg.K_2):
+        if self.key_pressed(pg.K_2):
             self.start = 2
 
-        if self.key_press(pg.K_F1):
+        if self.key_pressed(pg.K_F1):
             self.fps_text.visible = not self.fps_text.visible
 
-        if self.key_press(pg.K_ESCAPE):
+        if self.key_pressed(pg.K_ESCAPE):
             self.signal_quit()
+
+        if self.key_pressed(pg.K_t):
+            if isinstance(self.state, AttractState):
+                self.change_state(TestPath(self))
+            elif isinstance(self.state, TestPath):
+                self.change_state(AttractState(self))
 
         if self.prev_direction == self.direction:
             self.repeat_delay -= self.delta_time
@@ -388,6 +420,36 @@ class Galaga(Game):
         self.num_credits -= self.start
         self.texts[TEXT_0].text = str(self.num_credits)
         self.start = 0
+
+    def move_bullets(self):
+        for bullet in self.bullets:
+            if bullet.plan == Plan.ALIVE:
+                sprite = bullet.sprite
+                if bullet.kind == EntityType.BLUE_BULLET:
+                    # TODO: Player bullets only travel in astraight line but
+                    #   when the player is being beamed, the bullets can go at an
+                    #   angle - add support for that
+                    bullet.y -= BULLET_SPEED * self.delta_time
+                    if bullet.y < (1 / ORIGINAL_Y_CELLSF) * 100:
+                        bullet.plan = Plan.DEAD
+                        sprite.visible = False
+                else:
+                    tx = self.delta_time * bullet.velocity.x
+                    ty = self.delta_time * bullet.velocity.y
+
+                    # update the position
+                    bullet.x -= tx
+                    bullet.y -= ty
+
+                    if bullet.y > ((ORIGINAL_Y_CELLSF - 2) / ORIGINAL_Y_CELLSF) * 100.0:
+                        bullet.plan = Plan.DEAD
+                        bullet.sprite.visible = False
+                    else:
+                        if self.player().was_hit(sprite):
+                            bullet.plan = Plan.DEAD
+                            sprite.visible = False
+
+                sprite.position = pc2v(glm.vec2(bullet.x, bullet.y))
 
     @staticmethod
     def format_score(score: int) -> str:
