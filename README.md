@@ -14,16 +14,15 @@ and a video resolution of 288 x 224 pixels at 16 colors.
 
 In those days the internet didn't exist and there was no way to get even the slightest information about the code
 behind the game. Over the years several conversions of the coin-op have been made, both for gaming consoles,
-first of all the excellent Galaga "Demons of Death" for NES, both for the major home computers, among which the version
+first of all the excellent Galaga "Demons of Death" for NES, and for the major home computers, among which the version
 for MSX and for Atari 7800 stand out. Some excellent unofficial conversions were made, including the one for Atari 2600
 and for Commodore 64.
 
 In 2017 Stefan Wessels wrote a [remake of the game](https://github.com/StewBC/Galaga) using AppGameKit (AGK) & Tier 1,
 hence in Basic language.
 
-I personally think Stefan did a great job, making really clear for the first time
-how to code Galaga mechanics. I studied the code in great detail and I said myself: why not make a conversion
-using Python ? 
+I personally think Stefan did a great job, making really clear for the first time how to code Galaga mechanics.
+I studied the code in great detail and I said myself: why not make a conversion using Python ? 
 
 ![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-1.jpg?raw=true)
 
