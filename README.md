@@ -49,7 +49,7 @@ You can find the library code into **pyjam** folder.
 
 ## pybox2d prerequisite
 pyjam requires [pybox2d](https://github.com/pybox2d/pybox2d) 2.3.10  
-pybox2d 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9 or 3.10.  
+pybox2d 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9, 3.10 nor 3.11.  
 If using Python 3.9+ please follow build & install instructions [here](https://github.com/pybox2d/pybox2d/blob/master/INSTALL.md).
 Note that [swig](https://www.swig.org/) and a C++ compiler is required to build it. 
 
