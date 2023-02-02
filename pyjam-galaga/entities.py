@@ -2,7 +2,7 @@ from Box2D import b2PolygonShape
 
 from random import randint
 from pyjam import utils
-from pyjam.application import Game, pc2v, pcy2vy, vx2pcx, vy2pcy
+from pyjam.application import Game, pc2v, pcy2vy, vx2pcx, vy2pcy, pcx2vx
 from pyjam.core import Bounds
 from pyjam.utils import *
 
@@ -240,6 +240,8 @@ class Player:
 
         self.__grid = Grid()
 
+        self.fire_timer = 0.0
+
         # capture variables
         self.__capture_state = CaptureState.OFF
 
@@ -297,6 +299,96 @@ class Player:
         self.ships[0].sprite.visible = True
         self.ships[1].plan = Plan.DEAD
         self.ships[1].sprite.visible = False
+
+    def update(self):
+        self.game.flash_timer += self.game.delta_time
+        if self.game.flash_timer >= FLASH_TIME:
+            index = self.game.flash_index[self.game.current_player_idx]
+            self.game.texts[index].visible = not self.game.texts[index].visible
+            self.game.flash_timer = 0.0
+
+        capture_state = self.capture_state
+
+        if capture_state != CaptureState.OFF:
+            self.handle_capture()
+
+        if self.is_capturing() or capture_state >= CaptureState.RESCUED:
+            return
+
+        if not self.ships[0].sprite or not self.ships[0].sprite.visible:
+            return
+
+        if self.game.direction:
+            if self.ships[0].plan & Plan.ALIVE:
+                newx = self.ships[0].x
+                if self.ships[1].plan & Plan.ALIVE:
+                    # player frame has an empty column of pixels on the right
+                    # (it should be 15 px as width, instead is 16)
+                    width = vx2pcx(self.ships[1].sprite.width - 1)
+                else:
+                    width = 0
+                newx += self.game.direction * PLAYER_MOVEMENT_SPEED * self.game.delta_time
+                offset_x = vx2pcx(self.ships[0].sprite.hotspot.x)
+                if newx - offset_x < 0:
+                    newx = offset_x
+                elif newx + offset_x >= 100 - width:
+                    newx = 100 - width - offset_x
+
+                self.ships[0].x = newx
+                self.ships[0].sprite.x = pcx2vx(newx)
+
+                if self.ships[1].plan == Plan.ALIVE:
+                    self.ships[1].x = newx + width
+                    self.ships[1].sprite.x = pcx2vx(self.ships[1].x)
+
+        # don't allow firing before play starts
+        if not self.game.is_gameplay_running():
+            return
+
+        # don't allow firing during capture sequence
+        if capture_state != CaptureState.OFF and capture_state != CaptureState.READY:
+            return
+
+        # Fire if not 2 bullets/ship onscreen already
+        if self.game.fire:
+
+            # if self.fire_timer > 0.0:
+            #     self.fire_timer -= self.game.delta_time
+            #     return
+
+            if not self.game.bullets[0].plan:
+                b_point_index = 0
+            elif not self.game.bullets[1].plan:
+                b_point_index = 1
+#                self.fire_timer = 0.010
+            else:
+                b_point_index = -1
+
+            if b_point_index >= 0:
+                self.shots_fired += 1
+                self.game.sfx_play(SOUND_PLAYER_SHOOT)
+                sprite = self.game.bullets[b_point_index].sprite
+                self.game.bullets[b_point_index].plan = Plan.ALIVE
+                self.game.bullets[b_point_index].x = self.ships[0].x
+                self.game.bullets[b_point_index].y = self.ships[0].y
+                sprite.position = pc2v(glm.vec2(self.game.bullets[b_point_index].x,
+                                                self.game.bullets[b_point_index].y))
+                sprite.visible = True
+
+                # if ship 2 is alive and not captured => double fire
+                if self.ships[1].plan == Plan.ALIVE and not self.is_captured():
+                    self.shots_fired += 1
+                    b_point_index += 2
+                    sprite = self.game.bullets[b_point_index].sprite
+                    self.game.bullets[b_point_index].plan = Plan.ALIVE
+                    # player frame has an empty column of pixels on the right
+                    # (it should be 15 px as width, instead is 16)
+                    self.game.bullets[b_point_index].x = \
+                        self.game.bullets[b_point_index - 2].x + vx2pcx(self.ships[0].sprite.size.x - 1)
+                    self.game.bullets[b_point_index].y = self.game.bullets[b_point_index - 2].y
+                    sprite.position = pc2v(glm.vec2(self.game.bullets[b_point_index].x,
+                                                    self.game.bullets[b_point_index].y))
+                    sprite.visible = True
 
     def kill(self, ship_num):
         """ Player.kill() subroutine """

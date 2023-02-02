@@ -40,7 +40,7 @@ class Galaga(Game):
         # cheats
         # -------------
         # self-explanatory
-        self.invulnerability = True
+        self.invulnerability = False
 
         # self-explanatory
         self.infinite_lives = False
@@ -423,6 +423,9 @@ class Galaga(Game):
         self.num_credits -= self.start
         self.texts[TEXT_0].text = str(self.num_credits)
         self.start = 0
+
+    def is_gameplay_running(self):
+        return isinstance(self.state, PlayingState) and self.state.substate >= PlayingState.Substate.Play
 
     def move_bullets(self):
         for bullet in self.bullets:

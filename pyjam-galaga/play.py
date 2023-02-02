@@ -57,7 +57,7 @@ class PlayingState(GameState):
         return self.__game_over
 
     def update(self):
-        self.handle_player()
+        self.game.player().update()
         self.game.move_bullets()
         self.update_enemies()
         self.game.fx_svc.update(self.game.delta_time)
@@ -463,7 +463,7 @@ class PlayingState(GameState):
 
         player.score = 0
         player.lives = 2
-        player.stage = 3
+        player.stage = 1
         player.enemies_alive = 0
         player.shots_fired = 0
         player.hits = 0
@@ -500,89 +500,6 @@ class PlayingState(GameState):
         for enemy in self.game.enemies[player_num]:
             enemy.plan = Plan.DEAD
             enemy.set_captor(False)
-
-    def handle_player(self):
-        self.game.flash_timer += self.game.delta_time
-        if self.game.flash_timer >= FLASH_TIME:
-            index = self.game.flash_index[self.game.current_player_idx]
-            self.game.texts[index].visible = not self.game.texts[index].visible
-            self.game.flash_timer = 0.0
-
-        capture_state = self.game.player().capture_state
-
-        if capture_state != CaptureState.OFF:
-            self.game.player().handle_capture()
-
-        if self.game.player().is_capturing() or capture_state >= CaptureState.RESCUED:
-            return
-
-        if not self.game.player().ships[0].sprite or not self.game.player().ships[0].sprite.visible:
-            return
-
-        if self.game.direction:
-            if self.game.player().ships[0].plan & Plan.ALIVE:
-                newx = self.game.player().ships[0].x
-                if self.game.player().ships[1].plan & Plan.ALIVE:
-                    # player frame has an empty column of pixels on the right
-                    # (it should be 15 px as width, instead is 16)
-                    width = vx2pcx(self.game.player().ships[1].sprite.width - 1)
-                else:
-                    width = 0
-                newx += self.game.direction * PLAYER_MOVEMENT_SPEED * self.game.delta_time
-                offset_x = vx2pcx(self.game.player().ships[0].sprite.hotspot.x)
-                if newx - offset_x < 0:
-                    newx = offset_x
-                elif newx + offset_x >= 100 - width:
-                    newx = 100 - width - offset_x
-
-                self.game.player().ships[0].x = newx
-                self.game.player().ships[0].sprite.x = pcx2vx(newx)
-
-                if self.game.player().ships[1].plan == Plan.ALIVE:
-                    self.game.player().ships[1].x = newx + width
-                    self.game.player().ships[1].sprite.x = pcx2vx(self.game.player().ships[1].x)
-
-        # don't allow firing before play starts
-        if self.substate < PlayingState.Substate.Play:
-            return
-
-        # don't allow firing during capture sequence
-        if capture_state != CaptureState.OFF and capture_state != CaptureState.READY:
-            return
-
-        # Fire if not 2 bullets/ship onscreen already
-        if self.game.fire:
-            if not self.game.bullets[0].plan:
-                b_point_index = 0
-            elif not self.game.bullets[1].plan:
-                b_point_index = 1
-            else:
-                b_point_index = -1
-
-            if b_point_index >= 0:
-                self.game.player().shots_fired += 1
-                self.game.sfx_play(SOUND_PLAYER_SHOOT)
-                sprite = self.game.bullets[b_point_index].sprite
-                self.game.bullets[b_point_index].plan = Plan.ALIVE
-                self.game.bullets[b_point_index].x = self.game.player().ships[0].x
-                self.game.bullets[b_point_index].y = self.game.player().ships[0].y
-                sprite.position = pc2v(glm.vec2(self.game.bullets[b_point_index].x,
-                                                self.game.bullets[b_point_index].y))
-                sprite.visible = True
-
-                if self.game.player().ships[1].plan == Plan.ALIVE and not self.game.player().is_captured():
-                    self.game.player().shots_fired += 1
-                    b_point_index += 2
-                    sprite = self.game.bullets[b_point_index].sprite
-                    self.game.bullets[b_point_index].plan = Plan.ALIVE
-                    # player frame has an empty column of pixels on the right
-                    # (it should be 15 px as width, instead is 16)
-                    self.game.bullets[b_point_index].x = \
-                        self.game.bullets[b_point_index - 2].x + vx2pcx(self.game.player().ships[0].sprite.size.x - 1)
-                    self.game.bullets[b_point_index].y = self.game.bullets[b_point_index - 2].y
-                    sprite.position = pc2v(glm.vec2(self.game.bullets[b_point_index].x,
-                                                    self.game.bullets[b_point_index].y))
-                    sprite.visible = True
 
     def update_enemies(self):
         if PlayingState.Substate.PlayerInit <= self.__substate <= PlayingState.Substate.ShowField:
