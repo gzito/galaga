@@ -2,6 +2,7 @@
 # TODO
 # [X] Design and implement path for bosses
 # [ ] Fix and tune attack algorithm
+# [ ] Fix capture beam: it's too sensitive
 # [X] Ehnance and fix cargo behavior
 # [X] Implement on-screen scoring for bosses
 # [X] Implement on-screen scoring for challenge waves
