@@ -3,7 +3,9 @@
 # [X] Design and implement path for bosses
 # [ ] Fix and tune attack algorithm
 # [X] Ehnance and fix cargo behavior
-# [ ] Implement differentiated score for bosses, challenge waves, etc. and its visualization
-# [ ] Handle other kind of enemies: Scorpion, Bosconian, Dragonfly, Mosquito
-# [ ] Design and implement other challenge stages
+# [X] Implement on-screen scoring for bosses
+# [X] Implement on-screen scoring for challenge waves
+# [ ] Handle other kind of enemies: transforms (Scorpion, Bosconian, Galaxian)
+# [ ] Implement on-screen scoring for transforms triple
+# [ ] Design and implement other challenge stages and put in Dragonfly, Satellite, Enterprise
 # -----------------

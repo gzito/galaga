@@ -2,15 +2,16 @@ import os
 
 from Box2D import b2PolygonShape
 
+from galaga_data import *
 from background import StarsService
 from fxservice import RunningFxService
 from attack import AttackService
 from entities import Enemy, Bullet, Player
-from galaga_data import *
 from play import PlayingState
 from hwstartup import HwStartupState
 from attract import AttractState
 from tests import TestPath
+from spawn import EnemySpawner
 
 from pyjam.application import *
 from pyjam.sprite import Sprite
@@ -30,7 +31,7 @@ class Galaga(Game):
         self.go_fullscreen = False
 
         # if True skip the initial hardware setup sequence
-        self.skip_hw_startup = False
+        self.skip_hw_startup = True
 
         # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
         self.fast_spawn = False
@@ -39,7 +40,7 @@ class Galaga(Game):
         # cheats
         # -------------
         # self-explanatory
-        self.invulnerability = False
+        self.invulnerability = True
 
         # self-explanatory
         self.infinite_lives = False
@@ -54,6 +55,8 @@ class Galaga(Game):
         self.fx_svc = RunningFxService(self)
 
         self.attack_svc = AttackService(self)
+
+        self.spawner = EnemySpawner(self)
 
         # [player1,player2]
         self.players = [Player(), Player()]

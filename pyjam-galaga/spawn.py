@@ -32,6 +32,10 @@ class EnemySpawner:
 
         self.game = game
 
+        # a list of enemy forming a single wave during challenge stage
+        # used in Enemy.kill to assign scoring when a full wave is cleared
+        self.wave_enemies = []
+
     def spawn_get_next_extra(self, side, number):
         stage = self.game.player().stage
         wave = self.game.player().attack_wave
@@ -158,6 +162,7 @@ class EnemySpawner:
         # On challange stages, the enemies go straight to death at the end of the path
         if self.challenge_index != 0:
             next_plan = Plan.DEAD
+            self.wave_enemies.append(position)
 
         current_player = self.game.player()
 
@@ -235,7 +240,10 @@ class EnemySpawner:
 
         player = self.game.player()
 
-        # wait 1 second between waves - wave "done" when in grid or destroyed (challange or all shot out)
+        if not self.spawn_wave and self.game.quiescence:
+            self.wave_enemies.clear()
+
+        # wait 1 second between waves - wave "done" when in grid or destroyed (challenge or all shot out)
         if not self.spawn_wave and not self.game.quiescence:
             if not Game.instance.fast_spawn:
                 self.spawn_timer = 1.0

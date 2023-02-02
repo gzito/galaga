@@ -563,24 +563,6 @@ class Leaderboard:
         f.close()
 
 
-# Galaga points
-# 400: captured fighter rescued
-# 1000: full wave destroyed during challenge stage
-g_score_sheet = {
-    EntityType.FIGHTER: (0, 0),
-    EntityType.CAPTURED_FIGHTER: (0, 1000),
-    EntityType.ENTERPRISE: (80, 80),        # have to check this one
-    EntityType.BOSS_GREEN: (0, 0),
-    EntityType.BOSS_BLUE: (150, 400),       # 800 if taking 1 payload; 1600 if it has 2 payloads
-    EntityType.BUTTERFLY: (80, 160),
-    EntityType.BEE: (50, 100),
-    EntityType.GALAXIAN: (80, 80),          # have to check this one
-    EntityType.SCORPION: (80, 80),          # have to check this one
-    EntityType.BOSCONIAN: (80, 80),         # have to check this one
-    EntityType.DRAGONFLY: (80, 80),         # have to check this one
-    EntityType.MOSQUITO: (80, 80)           # have to check this one
-}
-
 # ----------------------------------------------
 # SFX DATA
 # ----------------------------------------------

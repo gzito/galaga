@@ -5,9 +5,7 @@ import copy
 import glm
 
 from pyjam.application import GameState, pc2v, pcx2vx, pcy2vy, vx2pcx, vy2pcy
-from spawn import EnemySpawner
 from galaga_data import *
-from attack import AttackService
 
 
 class PlayingState(GameState):
@@ -36,7 +34,6 @@ class PlayingState(GameState):
         super().__init__(game)
 
         self.__state_timer = 0.0
-        self.__spawner = None
         if substate is None:
             self.__substate = PlayingState.Substate.InitGame
         else:
@@ -56,15 +53,8 @@ class PlayingState(GameState):
         self.__scratch2 = 0
         self.__state_timer = 0.0
 
-    @property
-    def spawner(self):
-        return self.__spawner
-
     def is_game_over(self):
         return self.__game_over
-
-    def enter(self):
-        self.__spawner = EnemySpawner(self.game)
 
     def update(self):
         self.handle_player()
@@ -92,7 +82,7 @@ class PlayingState(GameState):
         # StageInit
         elif self.substate == PlayingState.Substate.StageInit:
             if self.__state_timer < 0:
-                self.__spawner.setup_new_stage()
+                self.game.spawner.setup_new_stage()
                 self.game.bullet_index = self.game.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET)
                 self.game.set_text_range_visible(TEXT_PLAYER, TEXT_PLAYER_NUM, False)
                 if self.game.player().stage_index < 3:
@@ -186,7 +176,7 @@ class PlayingState(GameState):
 
             if self.game.player().ships[0].plan != Plan.DEAD:
                 if self.game.player().spawn_active:
-                    self.__spawner.run()
+                    self.game.spawner.run()
                 if not self.game.attack_svc.bugs_attack:
                     self.game.attack_svc.bugs_attack = self.game.attack_svc.attack_ready()
                 if self.game.attack_svc.bugs_attack:
@@ -208,8 +198,8 @@ class PlayingState(GameState):
         # PlayerDied
         elif self.substate == PlayingState.Substate.PlayerDied:
             if not self.game.quiescence or len(self.game.fx_svc.effects) != 0:
-                if self.__spawner.spawn_wave:
-                    self.__spawner.run()
+                if self.game.spawner.spawn_wave:
+                    self.game.spawner.run()
             else:
                 if not self.game.infinite_lives:
                     self.game.player().lives -= 1
@@ -473,7 +463,7 @@ class PlayingState(GameState):
 
         player.score = 0
         player.lives = 2
-        player.stage = 1
+        player.stage = 3
         player.enemies_alive = 0
         player.shots_fired = 0
         player.hits = 0

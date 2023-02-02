@@ -1,5 +1,9 @@
+## 02-Feb-2023
+# Implemented on-screen scoring for bosses
+# Implemented on-screen scoring for cleared waves during challenge-stage
+
 ## 01-Feb-2023
-# Implemented movement pattern for boss
+# Implemented movement pattern for bosses
 # Enhanced cargo feature
 # Enhanced and fix Attacker service
 # Refactored a lot of classes

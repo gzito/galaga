@@ -299,9 +299,7 @@ class Player:
         self.ships[1].sprite.visible = False
 
     def kill(self, ship_num):
-        """
-        Player.kill() subroutine
-        """
+        """ Player.kill() subroutine """
         ship = self.ships[ship_num]
         ship.plan = Plan.DEAD
         ship.sprite.visible = 0
@@ -432,7 +430,7 @@ class Player:
             ship_1.plan = Plan.ALIVE
             cap_fighter.sprite.visible = False
 
-            cap_fighter.clear_attack()
+            cap_fighter.clear_attack_and_cargo_flags()
 
             self.captured_fighter = None
             ship_1.sprite.position = pc2v(glm.vec2(ship_1.x, ship_1.y))
@@ -563,7 +561,7 @@ class Enemy(Entity):
     def get_cargo_boss(self):
         return self.__cargo_boss
 
-    def clear_attack(self):
+    def clear_attack_and_cargo_flags(self):
         # is this enemy an attacker?
         if self.attack_index != -1:
             self.game.attack_svc.attackers.clear_at(self.attack_index)
@@ -750,7 +748,7 @@ class Enemy(Entity):
         elif self.plan == Plan.ORIENT:
             # Take out of attack mode when arriving in the grid
             if self.attack_index >= 0:
-                self.clear_attack()
+                self.clear_attack_and_cargo_flags()
 
             if self.rotation < -GRID_ORIENT_ANGLE:
                 self.rotation += GRID_ORIENT_ANGLE
@@ -1046,9 +1044,7 @@ class Enemy(Entity):
         return False
 
     def kill(self):
-        """
-        Enemy.kill()
-        """
+        """ Enemy.kill() subroutine """
 
         player = self.game.player()
 
@@ -1079,21 +1075,32 @@ class Enemy(Entity):
             player.ships[0].sprite.angle = 0
             player.capture_state = CaptureState.OFF
 
-        if self.plan == Plan.GRID:
-            self.game.increment_score(g_score_sheet[self.kind][0])
-        else:
-            self.game.increment_score(g_score_sheet[self.kind][1])
+        scoring = self.assign_scoring()
+        self.game.increment_score(scoring)
 
         self.plan = Plan.DEAD
-        self.clear_attack()
+        self.clear_attack_and_cargo_flags()
         self.game.sfx_play(g_kill_sound[self.kind])
 
-        # fx_seq = RunningFxSequence()
-        effect_explosion = self.create_explosion_fx()
-        # effect_score = self.create_score_fx()
-        # fx_seq.append(effect_explosion)
-        # fx_seq.append(effect_score)
-        self.game.fx_svc.insert(effect_explosion)
+        # bosses and transforms have dedicated on-screen scoring
+        if scoring == 150 or scoring >= 400:
+            fx_seq = RunningFxSequence()
+            effect_explosion = self.create_explosion_fx()
+            effect_score = self.create_score_fx(scoring)
+            fx_seq.append(effect_explosion)
+            fx_seq.append(effect_score)
+        else:
+            fx_seq = self.create_explosion_fx()
+
+        self.game.fx_svc.insert(fx_seq)
+
+        # is challenge stage?
+        if self.game.player().stage_index == 3:
+            self.game.spawner.wave_enemies.remove(self.position_index)
+            if len(self.game.spawner.wave_enemies) == 0:
+                self.game.increment_score(1000)
+                fx_seq = self.create_score_fx(1000)
+                self.game.fx_svc.insert(fx_seq)
 
     def create_explosion_fx(self):
         sprite = self.game.get_sprite_at_by_ent_type(EntityType.EXPLOSION, Enemy.next_explosion)
@@ -1105,8 +1112,24 @@ class Enemy(Entity):
         frames = self.game.ent_svc.get_entity_data(EntityType.EXPLOSION).frame_numbers
         return RunningFx(sprite, frames * (1.0 / (ENEMY_EXPLOSION_FPS + 2)))
 
-    def create_score_fx(self):
-        sprite = self.game.get_sprite_at_by_ent_type(EntityType.SCORE_800, 0)
+    def create_score_fx(self, scoring):
+        kind = EntityType.SCORE_150
+        if scoring == 400:
+            kind = EntityType.SCORE_400
+        elif scoring == 800:
+            kind = EntityType.SCORE_800
+        elif scoring == 1000:
+            kind = EntityType.SCORE_1000
+        elif scoring == 1500:
+            kind = EntityType.SCORE_1500
+        elif scoring == 1600:
+            kind = EntityType.SCORE_1600
+        elif scoring == 2000:
+            kind = EntityType.SCORE_2000
+        elif scoring == 3000:
+            kind = EntityType.SCORE_3000
+
+        sprite = self.game.get_sprite_at_by_ent_type(kind, 0)
         sprite.position = pc2v(glm.vec2(self.x, self.y))
         return RunningFx(sprite, 1.0)
 
@@ -1140,6 +1163,43 @@ class Enemy(Entity):
             self.game.bullet_index += 1
             if self.game.bullet_index >= MAX_BULLETS:
                 self.game.bullet_index = self.game.ent_svc.get_sprite_numbers(EntityType.BLUE_BULLET)
+
+    def assign_scoring(self) -> int:
+        """
+            Galaga scoring
+            https://strategywiki.org/wiki/Galaga/Gameplay
+        """
+
+        scoring = 0
+        if self.plan == Plan.GRID:
+            if self.kind == EntityType.BEE:
+                scoring = 50
+            elif self.kind == EntityType.BUTTERFLY:
+                scoring = 80
+            elif self.kind == EntityType.BOSS_BLUE:
+                scoring = 150
+            elif self.kind == EntityType.CAPTURED_FIGHTER:
+                scoring = 0
+        else:
+            if self.kind == EntityType.BEE:
+                scoring = 100
+            elif self.kind == EntityType.BUTTERFLY:
+                scoring = 160
+            elif self.kind == EntityType.BOSS_BLUE:
+                cargo_count = self.cargo.count()
+                if cargo_count == 0:
+                    scoring = 400
+                elif cargo_count == 1:
+                    scoring = 800
+                elif cargo_count >= 2:
+                    scoring = 1600
+            elif self.kind == EntityType.CAPTURED_FIGHTER:
+                scoring = 1000
+            elif EntityType.GALAXIAN <= self.kind <= EntityType.BOSCONIAN:
+                scoring = 160
+            # TODO add scoring for groups of transform
+
+        return scoring
 
 
 class Bullet(Entity):
