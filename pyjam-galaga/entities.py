@@ -1287,7 +1287,7 @@ class Enemy(Entity):
                     scoring = 1600
             elif self.kind == EntityType.CAPTURED_FIGHTER:
                 scoring = 1000
-            elif EntityType.GALAXIAN <= self.kind <= EntityType.BOSCONIAN:
+            elif EntityType.SCORPION <= self.kind <= EntityType.GALAXIAN:
                 scoring = 160
             # TODO add scoring for groups of transform
 

@@ -21,6 +21,8 @@ from pyjam.sprites.sheet import SpriteSheet
 from pyjam.text import Text, TextAlignment
 
 
+# Arcade Longplay [535] Galaga
+# https://www.youtube.com/watch?v=29VVkfuXkVI
 class Galaga(Game):
     def __init__(self):
         super().__init__()
@@ -31,10 +33,10 @@ class Galaga(Game):
         self.go_fullscreen = False
 
         # if True skip the initial hardware setup sequence
-        self.skip_hw_startup = False
+        self.skip_hw_startup = True
 
         # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
-        self.fast_spawn = False
+        self.fast_spawn = True
 
         # -------------
         # cheats

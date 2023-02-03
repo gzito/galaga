@@ -1,5 +1,7 @@
 import glm
 import pygame as pg
+from Box2D import b2PolygonShape
+
 from pyjam.application import Game
 from pyjam.constants import *
 from pyjam.sprite import Sprite
@@ -14,6 +16,9 @@ class JamSpriteScissor(Game):
         self.set_framerate(60)
 
         self.textured_box = None
+        self.step = 0.5
+        self.speed = 30.0
+        self.yellow_box = None
 
     def setup_display(self):
         self.set_virtual_display_resolution(800, 600)
@@ -29,8 +34,8 @@ class JamSpriteScissor(Game):
         # self.set_sprite_batch_sort_mode(SpriteSortMode.IMMEDIATE)
         # self.set_sprite_batch_sort_mode(SpriteSortMode.TEXTURE)
         # self.set_sprite_batch_sort_mode(SpriteSortMode.DEFERRED)
-        # self.set_sprite_batch_sort_mode(SpriteSortMode.BACK_TO_FRONT)
-        self.set_sprite_batch_sort_mode(SpriteSortMode.FRONT_TO_BACK)
+        self.set_sprite_batch_sort_mode(SpriteSortMode.BACK_TO_FRONT)
+        # self.set_sprite_batch_sort_mode(SpriteSortMode.FRONT_TO_BACK)
 
         texture_service = self.services[TEXTURE_SERVICE]
 
@@ -54,7 +59,7 @@ class JamSpriteScissor(Game):
         self.sprites.append(box2)
 
         # yellow
-        box3 = Sprite(white_frame)
+        self.yellow_box = box3 = Sprite(white_frame)
         box3.size = glm.vec2(64, 64)
         box3.position = glm.vec2(300, 300)
         box3.color = pg.Color('yellow')
@@ -70,12 +75,38 @@ class JamSpriteScissor(Game):
         self.sprites.append(box4)
 
     def update(self):
+        if self.key_down(pg.K_LEFT):
+            self.yellow_box.x -= self.speed * self.delta_time
+        elif self.key_down(pg.K_RIGHT):
+            self.yellow_box.x += self.speed * self.delta_time
+
+        if self.key_down(pg.K_UP):
+            self.yellow_box.y -= self.speed * self.delta_time
+        elif self.key_down(pg.K_DOWN):
+            self.yellow_box.y += self.speed * self.delta_time
+
         if self.textured_box.scissor is None:
             self.textured_box.scissor = self.textured_box.bounds
             self.textured_box.scissor.h = 1
-        self.textured_box.scissor.h += 0.5
+
+        self.textured_box.scissor.h += self.step
+
+        center_x = 0.0
+        center_y = 0.0
+        self.textured_box.shape = b2PolygonShape(
+            box=(self.textured_box.size.x / 2.0, self.textured_box.scissor.h / 2.0, (center_x, center_y), 0.0))
+
         if self.textured_box.scissor.h >= self.textured_box.bounds.h:
             self.textured_box.scissor.h = self.textured_box.bounds.h
+            self.step = -self.step
+        elif self.textured_box.scissor.h < 0.0:
+            self.textured_box.scissor.h = 1
+            self.step = -self.step
+
+        if self.yellow_box.collide(self.textured_box):
+            self.yellow_box.color = pg.Color('red')
+        else:
+            self.yellow_box.color = pg.Color('yellow')
 
 
 if __name__ == '__main__':
