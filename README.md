@@ -69,7 +69,7 @@ To play Galaga, cd into pyjam-galaga subfolder and run *main.py*.
 
 ## pyjam-galaga current status
 For several pieces of Stefan's code I merely ported them as they are to Python language.
-For other parts I did some refactoring and adaptation to pyjam.
+For other parts I did some refactoring and adaptation to Python and pyjam.
 I also added the code to complete the rescue of fighter sequence missed in the original
 Stefan's work.
 
@@ -86,17 +86,22 @@ b) The demo-attract sequence is blocked in but is not functional past the initia
 
 c) The gameplay is still incomplete and there could be issues, but the basic behaviours are there.  
 c.1) The regular attack stages work pretty well.  
-c.2) The challenging stages work for the first 3 or so.  
-c.3) The bees are quite complete. The butterflies could use a bit of tuning.  
-c.4) The bosses still use the butterfly flight logic.  
+c.2) The challenging stages greater than the 3rd must be implemented ; Dragonfly, Satellite and Enterprise need to be put in  
+c.3) The bees are quite complete. The butterflies and bosses movement patterns could use a bit of tuning.  
+c.4) The attack algorithm needs some refinement  
 c.5) the 1 and 2 player support should be complete, though I've not completely tested it.  
-c.6) Capture / rescue sequence is complete.
+c.6) Capture / rescue sequence is complete.  
+c.7) Transforms enemies (Scorpion, Bosconian, Galaxian) needs to be implemented.  
+c.8) The on-screen scoring is implemented and quite functional
 
 d) The post-game flow with high-score taking, etc. is complete or quite complete.
 
-e) Once a highscore is made, the leaderboard is saved in the user home folder and automatically reloaded next time.
+e) Once a highscore is made, the leaderboard is saved in the user's home folder and automatically reloaded next time.
 
 f) Python code is not as clean as I would like, there is still a lot of work to be done.
+
+See [CHANGELOG.txt](./CHANGELOG.txt) to see the history of changes since the first release.  
+See [TODO.txt](./TODO.txt) to check what still needs to be implemented or improved.
 
 ## Acknowledgements
 [Stefan Wessels](https://github.com/StewBC)  

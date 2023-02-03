@@ -31,7 +31,7 @@ class Galaga(Game):
         self.go_fullscreen = False
 
         # if True skip the initial hardware setup sequence
-        self.skip_hw_startup = True
+        self.skip_hw_startup = False
 
         # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
         self.fast_spawn = False
