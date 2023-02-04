@@ -2,7 +2,7 @@
 # TODO
 # [X] Design and implement movement pattern for bosses
 # [ ] Refine, fix and tune attack algorithm
-# [ ] Fix capture beam: it's too sensitive
+# [X] Fix capture beam collision with fighter
 # [X] Ehnance and fix cargo behavior
 # [X] Implement on-screen scoring for bosses
 # [X] Implement on-screen scoring for challenge waves

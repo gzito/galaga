@@ -1074,7 +1074,9 @@ class Enemy(Entity):
                 self.game.make_beam = BeamState.OFF
 
         # Make the collision box the size of the beam at this stage
-        sprite.shape = b2PolygonShape(box=(sprite.size.x / 2.0, self.__beam_height / 2.0))
+        center_x = 0
+        center_y = (self.__beam_height - sprite.bounds.h) / 2
+        sprite.shape = b2PolygonShape(box=(sprite.size.x / 2.0, self.__beam_height / 2.0, (center_x, center_y), 0.0))
 
         if not self.game.player().is_capturing() and \
                 self.game.make_beam >= BeamState.OPENING and \

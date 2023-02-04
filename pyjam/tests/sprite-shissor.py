@@ -15,10 +15,12 @@ class JamSpriteScissor(Game):
 
         self.set_framerate(60)
 
-        self.textured_box = None
         self.step = 0.5
         self.speed = 30.0
+        self.blue_box = None
+        self.red_box = None
         self.yellow_box = None
+        self.textured_box = None
 
     def setup_display(self):
         self.set_virtual_display_resolution(800, 600)
@@ -43,7 +45,7 @@ class JamSpriteScissor(Game):
         white_frame = SpriteFrame(texture_service.create_color_texture(pg.Color('white')))
 
         # blue
-        box1 = Sprite(white_frame)
+        self.blue_box = box1 = Sprite(white_frame)
         box1.size = glm.vec2(64, 64)
         box1.position = glm.vec2(300, 200)
         box1.color = pg.Color('blue')
@@ -51,7 +53,7 @@ class JamSpriteScissor(Game):
         self.sprites.append(box1)
 
         # red
-        box2 = Sprite(white_frame)
+        self.red_box = box2 = Sprite(white_frame)
         box2.size = glm.vec2(64, 64)
         box2.position = glm.vec2(400, 200)
         box2.color = pg.Color('red')
@@ -91,8 +93,8 @@ class JamSpriteScissor(Game):
 
         self.textured_box.scissor.h += self.step
 
-        center_x = 0.0
-        center_y = 0.0
+        center_x = 0
+        center_y = (self.textured_box.scissor.h-self.textured_box.bounds.h) / 2
         self.textured_box.shape = b2PolygonShape(
             box=(self.textured_box.size.x / 2.0, self.textured_box.scissor.h / 2.0, (center_x, center_y), 0.0))
 
@@ -104,7 +106,7 @@ class JamSpriteScissor(Game):
             self.step = -self.step
 
         if self.yellow_box.collide(self.textured_box):
-            self.yellow_box.color = pg.Color('red')
+            self.yellow_box.color = pg.Color('green')
         else:
             self.yellow_box.color = pg.Color('yellow')
 
