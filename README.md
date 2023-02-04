@@ -50,7 +50,7 @@ I called it **pyjam**.
 > pybox2d 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9, 3.10 nor 3.11.  
 > If using Python 3.9+ please follow build & install instructions [here](https://github.com/pybox2d/pybox2d/blob/master/INSTALL.md).
 
-> Please Note that both [swig](https://www.swig.org/) and a C++ compiler are required to be able to build it. 
+> Please note that both [swig](https://www.swig.org/) and a C++ compiler are required to be able to build it. 
 
 ## Installation
 cd into the `root` folder and run:  
