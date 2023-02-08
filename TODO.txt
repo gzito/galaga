@@ -8,5 +8,5 @@
 # [X] Implement on-screen scoring for challenge waves
 # [ ] Handle other kind of enemies: transforms (Scorpion, Bosconian, Galaxian)
 # [ ] Implement on-screen scoring for transforms triple
-# [ ] Design and implement other challenge stages (> 3) and put in Dragonfly, Satellite, Enterprise
+# [ ] Design and implement other challenge stages (> 3) and put in Dragonfly, Mosquito & Enterprise
 # -----------------

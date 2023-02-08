@@ -214,7 +214,7 @@ class Galaga(Game):
                     for frame in frames_list:
                         animation.add_frame(assets_sp_sheet.frames[frame])
                     sprite.set_animation(animation)
-                    sprite.play(restart=True, fps=2, loop=True)
+                    sprite.play(fps=2, loop=True)
 
                 self.sprites.append(sprite)
 

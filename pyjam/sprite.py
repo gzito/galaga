@@ -202,21 +202,16 @@ class Sprite:
         self.__scissor = copy.copy(value)
 
     # set a new animation for the sprite
-    def set_animation(self, anim: Animation2D, autostart=True):
+    def set_animation(self, anim: Animation2D):
         if self.__animation != anim:
             self.__animation = copy.copy(anim)
-            if autostart:
-                self.__animation.restart()
-            self.__frame = self.__animation.get_current_frame()
 
     def is_playing(self) -> bool:
         return self.__animation is not None and self.__animation.is_playing()
 
-    def play(self, restart=True, fps=animation.DEFAULT_ANIM_FPS, loop=False):
+    def play(self, fps: int = Animation2D.DEFAULT_ANIM_FPS, loop: bool = True, start_frame_idx: int = 0, end_frame_idx: int = -1):
         if self.__animation:
-            self.__animation.fps = fps
-            self.__animation.enable_loop(loop)
-            self.__animation.play(restart)
+            self.__animation.play(fps, loop, start_frame_idx, end_frame_idx)
 
     def stop(self):
         if self.__animation:
@@ -235,7 +230,7 @@ class Sprite:
         if self.active:
             if self.is_playing():
                 self.__animation.update(delta_time)
-                self.__frame = self.__animation.get_current_frame()
+                self.__frame = self.__animation.current_frame
 
     def render(self, sprite_batch: SpriteBatch):
         if self.active and self.visible:

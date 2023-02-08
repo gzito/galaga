@@ -45,14 +45,11 @@ class JamSprites(application.Game):
     def create_animations(self):
         i = 0
         for gem in self.gem_types:
-            if gem == 'blue':
-                self.create_animation(gem, i, 29)
-            else:
-                self.create_animation(gem, i, 30)
+            self.create_animation(gem, i, 30)
             i += 30
 
     def create_animation(self, name, start, count):
-        anim = Animation2D(loop=True)
+        anim = Animation2D()
         sp_sheet = self.services[ASSET_SERVICE].get('textures/gemsheet')
         for n in range(start, start + count):
             anim.add_frame(sp_sheet.frames[f'gem_{n}'])
@@ -116,7 +113,7 @@ class JamSpritesState(application.GameState):
         sprite.size = glm.vec2(64, 64)
         anim_name = random.choice(self.game.gem_types)
         sprite.set_animation(self.game.animations[anim_name])
-        sprite.play()
+        sprite.play(fps=30)
         self.game.sprites.append(sprite)
         return sprite
 

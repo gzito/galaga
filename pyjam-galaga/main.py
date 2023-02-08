@@ -1,5 +1,5 @@
 import galaga
 
 # run the game
-galaga = galaga.Galaga()
-galaga.run()
+galaga_app = galaga.Galaga()
+galaga_app.run()

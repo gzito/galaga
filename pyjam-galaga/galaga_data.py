@@ -590,6 +590,7 @@ SOUND_PLAYER_DIE = 'player-die'
 SOUND_PLAYER_SHOOT = 'player-shoot'
 SOUND_STAGE_ICON = 'stage-icon'
 SOUND_START = 'start'
+SOUND_TRANSFORM = 'transform'
 
 g_sfx = [
     SOUND_BEAM,
@@ -615,7 +616,8 @@ g_sfx = [
     SOUND_PLAYER_DIE,
     SOUND_PLAYER_SHOOT,
     SOUND_STAGE_ICON,
-    SOUND_START
+    SOUND_START,
+    SOUND_TRANSFORM
 ]
 
 g_kill_sound = {

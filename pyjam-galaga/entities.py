@@ -1,3 +1,5 @@
+import copy
+
 from Box2D import b2PolygonShape
 
 from random import randint
@@ -9,13 +11,14 @@ from pyjam.utils import *
 from fxservice import RunningFx, RunningFxSequence
 from galaga_data import *
 from cargo import Cargo
+from transform import Transform
 
 
 # factory method
 def create_entity(kind, game):
     if kind == EntityType.CAPTURED_FIGHTER:
         entity = CapturedFighter()
-    elif EntityType.ENTERPRISE <= kind <= EntityType.MOSQUITO:
+    elif EntityType.BOSS_GREEN <= kind <= EntityType.ENTERPRISE:
         entity = Enemy()
     elif kind == EntityType.RED_BULLET or kind == EntityType.BLUE_BULLET:
         entity = Bullet()
@@ -136,6 +139,8 @@ class Grid:
 
         self.__time = [WALK_TIME, BREATHE_TIME]
 
+        self.__grid_y_coords = [0.0, 6.25, 12.5, 16.67, 20.83, 25.0]
+
     @property
     def timer(self):
         return self.__timer
@@ -169,6 +174,27 @@ class Grid:
         self.__dir = 1.0
         self.__breathing = 0
         self.__y_offset = 0.0
+
+    def get_coordinates(self, position_idx) -> glm.vec2:
+        col = gGrid_cols[position_idx]
+        row = gGrid_rows[position_idx]
+
+        player = self.game.player()
+        h = self.__grid_y_coords[row]
+        if player.grid.breathing:
+            # how much the grid expands along x and y
+            breathe_x = 1.418 * player.grid.timer
+            breathe_y = 0.675 * player.grid.timer
+
+            n = glm.vec2(19.85 + (col * 6.7) + (col - 5) * breathe_x, 11.05 + h + (row + 1) * breathe_y)
+        else:
+            walk_x = 9.925 * player.grid.timer
+            n = glm.vec2((col * 6.7) + walk_x, 11.05 + h)
+        # grid_y_offset is 0 during the game play, it's changed during show-field and hide-field phases,
+        # when exchanging from player 1 & 2
+        n.y += player.grid.y_offset
+
+        return n
 
     def update(self, delta_time):
         old_timer = self.__timer
@@ -406,7 +432,7 @@ class Player:
 
         sprite.position = pc2v(glm.vec2(ship.x, ship.y))
         sprite.visible = True
-        sprite.play(True, PLAYER_EXPLOSION_FPS)
+        sprite.play(PLAYER_EXPLOSION_FPS)
 
         frames = self.game.ent_svc.get_entity_data(EntityType.FIGHTER_EXPLOSION).frame_numbers
         running_effect = RunningFx(sprite, frames * (1.0 / (PLAYER_EXPLOSION_FPS - 1)))
@@ -634,6 +660,8 @@ class Enemy(Entity):
         # an entity taken as cargo has this attribute initialized
         self.__cargo_boss = None
 
+        self.__transform = Transform(self)
+
     def set_captor(self, value: bool):
         self.__is_captor = value
 
@@ -678,6 +706,10 @@ class Enemy(Entity):
     def is_boss(self):
         return self.kind == EntityType.BOSS_GREEN or self.kind == EntityType.BOSS_BLUE
 
+    @property
+    def transform(self):
+        return self.__transform
+
     def update(self, delta_time: float):
         if self.plan != Plan.GRID:
             self.game.quiescence = False
@@ -688,7 +720,7 @@ class Enemy(Entity):
 
         # if plan is GOTO_GRID, ORIENT or GRID => the destination is the grid
         if Plan.GOTO_GRID <= self.plan <= Plan.GRID:
-            self.get_grid_coordinate()
+            self.set_grid_coordinates()
 
         # Calculate how much to move this frame in each axis
         t = delta_time * self.velocity
@@ -740,30 +772,10 @@ class Enemy(Entity):
         # Put the enemy where it wants to go
         self.sprite.position = pc2v(glm.vec2(self.x, self.y))
 
-    def get_grid_coordinate(self):
-        grid_y_coords = [0, 18, 36, 48, 60, 72]
-
-        col = gGrid_cols[self.position_index]
-        row = gGrid_rows[self.position_index]
-
-        player = self.game.player()
-        h = grid_y_coords[row]
-        if player.grid.breathing:
-            # how much the grid expands along x and y
-            breathe_x = 1.418 * player.grid.timer
-            breathe_y = 0.675 * player.grid.timer
-
-            n = glm.vec2(19.85 + (col * 6.7) + (col - 5) * breathe_x, 11.05 + (vy2pcy(h)) + (row + 1) * breathe_y)
-        else:
-            walk_x = 9.925 * player.grid.timer
-            n = glm.vec2((col * 6.7) + walk_x, 11.05 + vy2pcy(h))
-        # grid_y_offset is 0 during the game play, it's changed during show-field and hide-field phases,
-        # when exchanging from player 1 & 2
-        n.y += player.grid.y_offset
-
+    def set_grid_coordinates(self):
+        n = self.game.player().grid.get_coordinates(self.position_index)
         self.delta_dest.x = n.x - self.x
         self.delta_dest.y = n.y - self.y
-
         self.setup_velocity_and_rotation()
 
     def setup_velocity_and_rotation(self):
@@ -1074,9 +1086,8 @@ class Enemy(Entity):
                 self.game.make_beam = BeamState.OFF
 
         # Make the collision box the size of the beam at this stage
-        center_x = 0
         center_y = (self.__beam_height - sprite.bounds.h) / 2
-        sprite.shape = b2PolygonShape(box=(sprite.size.x / 2.0, self.__beam_height / 2.0, (center_x, center_y), 0.0))
+        sprite.shape = b2PolygonShape(box=(sprite.size.x / 2.0, self.__beam_height / 2.0, (0, center_y), 0.0))
 
         if not self.game.player().is_capturing() and \
                 self.game.make_beam >= BeamState.OPENING and \
@@ -1202,7 +1213,7 @@ class Enemy(Entity):
         if Enemy.next_explosion == self.game.ent_svc.get_sprite_numbers(EntityType.EXPLOSION):
             Enemy.next_explosion = 0
         sprite.position = pc2v(glm.vec2(self.x, self.y))
-        sprite.play(restart=True, fps=ENEMY_EXPLOSION_FPS, loop=False)
+        sprite.play(fps=ENEMY_EXPLOSION_FPS, loop=False)
         frames = self.game.ent_svc.get_entity_data(EntityType.EXPLOSION).frame_numbers
         return RunningFx(sprite, frames * (1.0 / (ENEMY_EXPLOSION_FPS + 2)))
 
