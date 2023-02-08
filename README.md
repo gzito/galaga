@@ -58,7 +58,7 @@ cd into the `root` folder and run:
 $ pip install -r requirements.txt
 ```
 
-To play Galaga, cd into the `pyjam-galaga` subfolder and run `main.py`.  
+To play Galaga, cd into the `galaga` subfolder and run `main.py`.  
 
 ## pyjam-galaga keys  
 **Enter:** insert coin  
