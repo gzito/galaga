@@ -127,7 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-./pyjam-galaga/assets/wip
-./.idea
+
+# PyCharm
+.idea
 
 
