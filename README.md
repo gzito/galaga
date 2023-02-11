@@ -69,7 +69,7 @@ To play Galaga, cd into the `galaga` subfolder and run `main.py`.
 **F1:** show/hide FPS indicator  
 
 ## pyjam-galaga current status
-For several pieces of Stefan's code I merely ported them as they are to Python language.
+For some pieces of Stefan's code I ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to Python and pyjam.
 I also added the code to complete the `rescue of fighter sequence`, missing in the original
 Stefan's work.
@@ -88,11 +88,13 @@ in the `Galaga` class.
 - The gameplay is still incomplete and there could be issues, but the basic behaviours are there.  
   - The regular attack stages work pretty well.  
   - Stages greater than `Stage 3` still have to be implemented ; Dragonfly, Satellite and Enterprise need to be put in.  
-  - The bees are quite complete. The butterflies and bosses movement patterns could use a bit of tuning.  
-  - The attack algorithm needs some refinement.
+  - The bees are quite complete. 
+  - The butterflies movement pattern could use a bit of tuning.  
+  - Boss movement pattern implemented.  
+  - The attack algorithm needs some refinement.  
   - The 1 and 2 player support should be complete, though I've not completely tested it.  
   - Capture / rescue sequence is complete.  
-  - Transforms enemies (Scorpion, Bosconian, Galaxian) needs to be implemented.  
+  - Transforms enemies (Scorpion, Bosconian, Galaxian) implemented.  
   - The on-screen scoring is implemented and quite functional.
 
 - The post-game flow with high-score taking, etc. is complete or quite complete.
