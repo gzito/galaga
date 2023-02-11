@@ -2,6 +2,7 @@ import os
 
 from Box2D import b2PolygonShape
 
+from galaga.transform import TransformService
 from galaga_data import *
 from background import StarsService
 from fxservice import RunningFxService
@@ -36,7 +37,7 @@ class Galaga(Game):
         self.skip_hw_startup = True
 
         # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
-        self.fast_spawn = True
+        self.fast_spawn = False
 
         # -------------
         # cheats
@@ -45,7 +46,7 @@ class Galaga(Game):
         self.invulnerability = False
 
         # self-explanatory
-        self.infinite_lives = False
+        self.infinite_lives = True
 
         # -------------
         # services
@@ -59,6 +60,8 @@ class Galaga(Game):
         self.attack_svc = AttackService(self)
 
         self.spawner = EnemySpawner(self)
+
+        self.transform_svc = TransformService()
 
         # [player1,player2]
         self.players = [Player(), Player()]

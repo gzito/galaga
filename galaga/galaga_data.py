@@ -7,37 +7,37 @@ from pyjam.text import TextAlignment
 
 
 class EntityType(IntEnum):
-    FIGHTER = 0,
-    CAPTURED_FIGHTER = 1,
-    BOSS_GREEN = 2,
-    BOSS_BLUE = 3,
-    BUTTERFLY = 4,
-    BEE = 5,
-    SCORPION = 6,
-    BOSCONIAN = 7,
-    GALAXIAN = 8,
-    DRAGONFLY = 9,
-    MOSQUITO = 10,
-    ENTERPRISE = 11,
-    FIGHTER_EXPLOSION = 12,
-    BEAM = 13,
-    EXPLOSION = 14,
-    BLUE_BULLET = 15,
-    RED_BULLET = 16,
-    BADGE1 = 17,
-    BADGE5 = 18,
-    BADGE10 = 19,
-    BADGE20 = 20,
-    BADGE30 = 21,
-    BADGE50 = 22,
+    FIGHTER = 0
+    CAPTURED_FIGHTER = 1
+    BOSS_GREEN = 2
+    BOSS_BLUE = 3
+    BUTTERFLY = 4
+    BEE = 5
+    SCORPION = 6
+    BOSCONIAN = 7
+    GALAXIAN = 8
+    DRAGONFLY = 9
+    MOSQUITO = 10
+    ENTERPRISE = 11
+    FIGHTER_EXPLOSION = 12
+    BEAM = 13
+    EXPLOSION = 14
+    BLUE_BULLET = 15
+    RED_BULLET = 16
+    BADGE1 = 17
+    BADGE5 = 18
+    BADGE10 = 19
+    BADGE20 = 20
+    BADGE30 = 21
+    BADGE50 = 22
     NAMCO = 23
-    SCORE_150 = 24,
-    SCORE_400 = 25,
-    SCORE_800 = 26,
-    SCORE_1000 = 27,
-    SCORE_1500 = 28,
-    SCORE_1600 = 29,
-    SCORE_2000 = 30,
+    SCORE_150 = 24
+    SCORE_400 = 25
+    SCORE_800 = 26
+    SCORE_1000 = 27
+    SCORE_1500 = 28
+    SCORE_1600 = 29
+    SCORE_2000 = 30
     SCORE_3000 = 31
 
 
@@ -57,29 +57,32 @@ class Plan(IntEnum):
     FLUTTER = 12
     GOTO_BEAM = 13
     BEAM_ACTION = 14
-
+    BLINK = 15
+    TRANSFORM = 16
+    CLONE = 17
+    WAIT = 18
 
 class BeamState(IntEnum):
-    OFF = 0,
-    BOSS_SELECTED = 1,
-    POSITION = 2,
-    OPENING = 3,
-    HOLD = 4,
-    CLOSING = 5,
+    OFF = 0
+    BOSS_SELECTED = 1
+    POSITION = 2
+    OPENING = 3
+    HOLD = 4
+    CLOSING = 5
     CLOSED = 6
 
 
 class CaptureState(IntEnum):
     OFF = 0
-    FIGHTER_TOUCHED = 1,
-    DISPLAY_CAPTURED = 2,
-    HOLD = 3,
-    FIGHTER_CAPTURED = 4,
-    CAPTURE_COMPLETE = 5,
-    DISPLAY_READY = 6,
-    READY = 7,
-    RESCUED = 8,
-    SPINNING = 9,
+    FIGHTER_TOUCHED = 1
+    DISPLAY_CAPTURED = 2
+    HOLD = 3
+    FIGHTER_CAPTURED = 4
+    CAPTURE_COMPLETE = 5
+    DISPLAY_READY = 6
+    READY = 7
+    RESCUED = 8
+    SPINNING = 9
     DOCKING = 10
 
 
@@ -177,6 +180,12 @@ class EntitiesService:
     def set_sprites_used(self, ent_type: EntityType, player_idx: int, value: int):
         self.ent_data[ent_type].sprites_used[player_idx] = value
 
+    def inc_sprites_used(self, ent_type: EntityType, player_idx: int):
+        self.ent_data[ent_type].sprites_used[player_idx] += 1
+
+    def dec_sprites_used(self, ent_type: EntityType, player_idx: int):
+        self.ent_data[ent_type].sprites_used[player_idx] -= 1
+
     def get_last_sprite_idx(self, ent_type: EntityType) -> int:
         """ Returns the last available sprite idx for the given entity type """
         return self.get_sprite_offset(ent_type) + self.get_sprite_numbers(ent_type) - 1
@@ -184,7 +193,7 @@ class EntitiesService:
     def get_first_free_sprite_idx(self, ent_type: EntityType, player_idx: int) -> int:
         """ Returns the first free sprite idx for the given entity type and increment sprites_used """
         idx = self.get_sprite_offset(ent_type) + self.get_sprites_used(ent_type, player_idx)
-        self.ent_data[ent_type].sprites_used[player_idx] += 1
+        self.inc_sprites_used(ent_type, player_idx)
         return idx
 
 
@@ -424,27 +433,27 @@ gSpawn_order[4][1] = [25, 35, 33, 43]
 
 # col position relative to grid
 gGrid_cols = [
-    3, 4, 5, 6,
-    3, 4, 5, 6,
-    1, 2, 3, 4, 5, 6, 7, 8,
-    1, 2, 3, 4, 5, 6, 7, 8,
+             3, 4, 5, 6,
+             3, 4, 5, 6,
+       1, 2, 3, 4, 5, 6, 7, 8,
+       1, 2, 3, 4, 5, 6, 7, 8,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 # row position relative to grid
 gGrid_rows = [
-    0, 0, 0, 0,
-    1, 1, 1, 1,
-    2, 2, 2, 2, 2, 2, 2, 2,
-    3, 3, 3, 3, 3, 3, 3, 3,
+             0, 0, 0, 0,
+             1, 1, 1, 1,
+       2, 2, 2, 2, 2, 2, 2, 2,
+       3, 3, 3, 3, 3, 3, 3, 3,
     4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 
 gMirror = [
-    0, 0, 1, 1,
-    0, 0, 1, 1,
-    0, 0, 0, 0, 1, 1, 1, 1,
-    0, 0, 0, 0, 1, 1, 1, 1,
+             0, 0, 1, 1,
+             0, 0, 1, 1,
+       0, 0, 0, 0, 1, 1, 1, 1,
+       0, 0, 0, 0, 1, 1, 1, 1,
     0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
     0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
 

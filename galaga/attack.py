@@ -1,3 +1,6 @@
+import random
+
+from galaga.transform import TransformData
 from galaga_data import *
 from pyjam.application import Game
 
@@ -219,7 +222,7 @@ class AttackService:
                     if enemy.plan == Plan.GRID:
                         # Make it launch if it was still idle
                         kind = enemy.kind
-                        a_boss = enemy.is_boss()
+                        a_boss = enemy.is_boss_kind()
                         # if attacker is a boss
                         if a_boss:
                             if self.game.make_beam == BeamState.BOSS_SELECTED:
@@ -256,8 +259,12 @@ class AttackService:
                 position_index = enemy.get_cargo_boss().position_index
             else:
                 position_index = enemy.position_index
+                self.select_transforms(enemy)
             enemy.path_index = PATH_LAUNCH + gMirror[position_index]
-            enemy.next_path_point()
+            # if no transform selected
+            if enemy.plan != Plan.BLINK:
+                enemy.next_path_point()
+
             if self.game.sfx_get_num_channels(SOUND_DIVE_ATTACK) > 0:
                 self.game.sfx_stop(SOUND_DIVE_ATTACK)
             self.game.sfx_play(SOUND_DIVE_ATTACK)
@@ -289,3 +296,20 @@ class AttackService:
             if self.game.enemy_at(i).plan != Plan.DEAD:
                 count += 1
         return count
+
+    def select_transforms(self, enemy):
+        # TODO transforms can be also generated from butterflies only if there are no more bees
+        #  it is hence necessary to keep track of the numbers of bees and butterflies
+        stage = self.game.player().stage
+        if stage >= 15:
+            stage = (stage % 15) + 3
+        if stage >= 4 and enemy.kind == EntityType.BEE and not self.game.transform_svc.is_active():
+            r = random.choices([True, False], weights=[1, 4], k=1)
+            if r[0]:
+                # 4 <= stage <= 6:
+                kind = EntityType.SCORPION
+                if 8 <= stage <= 10:
+                    kind = EntityType.BOSCONIAN
+                elif 12 <= stage <= 14:
+                    kind = EntityType.GALAXIAN
+                enemy.blink_transform(kind)

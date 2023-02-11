@@ -7,11 +7,11 @@ from galaga_data import *
 
 class AttractState(GameState):
     class Substate(IntEnum):
-        TITLE = 1,
-        SHOW_VALUES = 2,
-        SHOW_COPYRIGHT = 3,
-        SHOW_PLAY = 4,
-        SHOW_SCORES = 5,
+        TITLE = 1
+        SHOW_VALUES = 2
+        SHOW_COPYRIGHT = 3
+        SHOW_PLAY = 4
+        SHOW_SCORES = 5
         HAVE_CREDIT = 6
 
     def __init__(self, game, substate=None):

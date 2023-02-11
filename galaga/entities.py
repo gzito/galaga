@@ -5,13 +5,15 @@ from Box2D import b2PolygonShape
 from random import randint
 from pyjam import utils
 from pyjam.application import Game, pc2v, pcy2vy, vx2pcx, vy2pcy, pcx2vx
+from pyjam.constants import ASSET_SERVICE
 from pyjam.core import Bounds
+from pyjam.sprites.animation import Animation2D
 from pyjam.utils import *
 
 from fxservice import RunningFx, RunningFxSequence
 from galaga_data import *
 from cargo import Cargo
-from transform import Transform
+from transform import TransformData
 
 
 # factory method
@@ -92,31 +94,12 @@ class Entity:
         # a timer used to delay next actions, in secs (seconds with fractional part)
         self.timer = 0.0
 
-    """
-    @property
-    def position(self) -> glm.vec2:
-        return self.__position
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
 
-    @position.setter
-    def position(self, value: glm.vec2):
-        self.__position = glm.vec2(value)
-
-    @property
-    def x(self) -> float:
-        return self.__position.x
-
-    @x.setter
-    def x(self, value: float):
-        self.__position.x = value
-
-    @property
-    def y(self) -> float:
-        return self.__position.y
-
-    @y.setter
-    def y(self, value: float):
-        self.__position.y = value
-    """
+    def get_position(self):
+        return glm.vec2(self.x, self.y)
 
 
 class Grid:
@@ -386,7 +369,7 @@ class Player:
                 b_point_index = 0
             elif not self.game.bullets[1].plan:
                 b_point_index = 1
-#                self.fire_timer = 0.010
+            #                self.fire_timer = 0.010
             else:
                 b_point_index = -1
 
@@ -654,13 +637,20 @@ class Enemy(Entity):
     def __init__(self):
         super().__init__()
         self.__beam_height = 0.0
+
         self.__is_captor = False
+
         # a boss bringing is cargo has this attribute initialized
         self.__cargo = Cargo()
+
         # an entity taken as cargo has this attribute initialized
         self.__cargo_boss = None
 
-        self.__transform = Transform(self)
+        self.__transform_data = None
+
+    @property
+    def transform_data(self):
+        return self.__transform_data
 
     def set_captor(self, value: bool):
         self.__is_captor = value
@@ -688,7 +678,7 @@ class Enemy(Entity):
             self.attack_index = -1
 
         # is this enemy a boss with cargo?
-        if self.is_boss() and self.cargo.count() > 0:
+        if self.is_boss_kind() and self.cargo.count() > 0:
             self.cargo.clear_all()
 
         if self.game.attack_svc.cargo_boss_idx == self.position_index:
@@ -703,12 +693,14 @@ class Enemy(Entity):
             self.cargo_index = -1
             self.set_cargo_boss(None)
 
-    def is_boss(self):
+    def is_boss_kind(self):
         return self.kind == EntityType.BOSS_GREEN or self.kind == EntityType.BOSS_BLUE
 
-    @property
-    def transform(self):
-        return self.__transform
+    def is_transform_kind(self):
+        return EntityType.SCORPION <= self.kind <= EntityType.GALAXIAN
+
+    def is_transform_leader(self):
+        return self.game.transform_svc.is_active() and self.position_index == self.game.transform_svc.get_transform(0)
 
     def update(self, delta_time: float):
         if self.plan != Plan.GRID:
@@ -719,7 +711,7 @@ class Enemy(Entity):
             return
 
         # if plan is GOTO_GRID, ORIENT or GRID => the destination is the grid
-        if Plan.GOTO_GRID <= self.plan <= Plan.GRID:
+        if (Plan.GOTO_GRID <= self.plan <= Plan.GRID) or self.plan == Plan.BLINK:
             self.set_grid_coordinates()
 
         # Calculate how much to move this frame in each axis
@@ -806,7 +798,7 @@ class Enemy(Entity):
 
         # set the enemy rotation only if it's not about to land in the grid and is not in the grid.
         # That's because the grid causes left/right motion that leads to extreme rotation which this ignores
-        if self.plan < Plan.ORIENT or self.plan > Plan.GRID:
+        if (self.plan < Plan.ORIENT or self.plan > Plan.GRID) and self.plan != Plan.BLINK:
             # if the enemy is about to land in the grid, don't change its angle as that looks bad
             if not (abs(self.delta_dest.y) < 3.0 and self.plan == Plan.GOTO_GRID):
                 self.rotation = r
@@ -828,7 +820,7 @@ class Enemy(Entity):
                 # TODO - I think this is actually right at the top of the screen, not here at the grid level
                 self.plan = Plan.PATH
                 # boss
-                if self.is_boss():
+                if self.is_boss_kind():
                     self.path_index = PATH_BOSS_ATTACK + gMirror[self.position_index]
                     self.next_plan = Plan.DESCEND
                 # bee
@@ -866,6 +858,10 @@ class Enemy(Entity):
                 if self is self.game.player().captured_fighter:
                     if CaptureState.OFF < self.game.player().capture_state < CaptureState.CAPTURE_COMPLETE:
                         self.game.player().capture_state = CaptureState.CAPTURE_COMPLETE
+                elif self.is_transform_kind():
+                    self.reset_transform()
+                    self.kind = self.transform_data.src_enemy_kind
+                    self.sprite.visible = True
         # end of a point in the path, maybe the end of the path
         elif self.plan == Plan.PATH:
             self.point_index += 1
@@ -876,11 +872,16 @@ class Enemy(Entity):
                 self.decision_on_post_path()
         # After descend, start the bottom half circle path
         elif self.plan == Plan.DESCEND:
-            self.plan = Plan.PATH
-            self.path_index = PATH_BEE_BOTTOM_CIRCLE + gMirror[self.position_index]
-            self.next_path_point()
-            # Set up for deciding what to do at the end of that bottom circle
-            self.next_plan = Plan.HOME_OR_FULL_CIRCLE
+            if self.is_transform_kind() and self.position_index >= 44:
+                self.next_plan = Plan.DIVE_AWAY
+                self.point_index = 0
+                self.decision_on_post_path()
+            else:
+                self.plan = Plan.PATH
+                self.path_index = PATH_BEE_BOTTOM_CIRCLE + gMirror[self.position_index]
+                self.next_path_point()
+                # Set up for deciding what to do at the end of that bottom circle
+                self.next_plan = Plan.HOME_OR_FULL_CIRCLE
         elif self.plan == Plan.FLUTTER:
             if self.y < 100:
                 self.setup_flutter_arc()
@@ -909,6 +910,17 @@ class Enemy(Entity):
             self.rotation = 180
             self.sprite.angle = self.rotation
             self.plan = Plan.BEAM_ACTION
+        elif self.plan == Plan.BLINK:
+            self.timer -= self.game.delta_time
+            if self.timer < 0.0:
+                self.plan = Plan.TRANSFORM
+        elif self.plan == Plan.TRANSFORM:
+            self.set_transform()
+        elif self.plan == Plan.WAIT:
+            if self.timer > 0.0:
+                self.timer -= self.game.delta_time
+            else:
+                self.plan = Plan.PATH
 
     def decision_on_post_path(self):
         # if just launched, set up to shoot, if not a peel-away
@@ -924,12 +936,20 @@ class Enemy(Entity):
         # TODO: - The DIVE_AWAY guys also have PLAN_PATH as the nextPath - Introduce a new state
         if self.plan == Plan.PATH:
             # boss
-            if self.is_boss():
+            if self.is_boss_kind():
                 self.path_index = PATH_BOSS_ATTACK + gMirror[self.position_index]
                 self.next_plan = Plan.DIVE_ATTACK
-            # bee
+            # bee or scorpion
             elif self.kind == EntityType.BEE:
                 self.path_index = PATH_BEE_ATTACK + gMirror[self.position_index]
+                self.next_plan = Plan.DESCEND
+            elif self.is_transform_kind():
+                # clone the transform
+                if self.game.transform_svc.transforms_count < 3:
+                    self.clone_transform()
+                    self.game.player().enemies_alive += 1
+                leader_pos = self.game.transform_svc.get_transform(0)
+                self.path_index = PATH_BEE_ATTACK + gMirror[leader_pos]
                 self.next_plan = Plan.DESCEND
             # butterfly or captured fighter
             else:
@@ -1153,7 +1173,7 @@ class Enemy(Entity):
 
         player = self.game.player()
 
-        # check if this enemy is a boss, and also is captor
+        # check if this enemy is both a boss and a captor
         if self.kind == EntityType.BOSS_BLUE and self.is_captor():
             player.clear_captor_boss()
             # check that this boss is not sleeping in the grid
@@ -1180,6 +1200,16 @@ class Enemy(Entity):
             player.ships[0].sprite.angle = 0
             player.capture_state = CaptureState.OFF
 
+        # when destroying a transform adjust relevant data structure as well
+        if self.is_transform_kind():
+            if self.is_transform_leader():
+                self.elect_new_leader_transform()
+            else:
+                self.game.transform_svc.remove(self.position_index)
+            # if it is the last of transforms, reset
+            if not self.game.transform_svc.is_active():
+                self.reset_transform()
+
         scoring = self.assign_scoring()
         self.game.increment_score(scoring)
 
@@ -1196,7 +1226,6 @@ class Enemy(Entity):
             fx_seq.append(effect_score)
         else:
             fx_seq = self.create_explosion_fx()
-
         self.game.fx_svc.insert(fx_seq)
 
         # is challenge stage?
@@ -1223,7 +1252,7 @@ class Enemy(Entity):
             kind = EntityType.SCORE_400
         elif scoring == 800:
             kind = EntityType.SCORE_800
-        elif scoring == 1000:
+        elif scoring == 1000 or scoring == 1160:
             kind = EntityType.SCORE_1000
         elif scoring == 1500:
             kind = EntityType.SCORE_1500
@@ -1300,11 +1329,111 @@ class Enemy(Entity):
                     scoring = 1600
             elif self.kind == EntityType.CAPTURED_FIGHTER:
                 scoring = 1000
-            elif EntityType.SCORPION <= self.kind <= EntityType.GALAXIAN:
+            elif self.is_transform_kind():
                 scoring = 160
-            # TODO add scoring for groups of transform
+                # add scoring for groups of transform
+                # TODO in challenge stage don't check self.game.transform_svc
+                if self.game.transform_svc.transforms_count == 0:
+                    scoring += 1000
 
         return scoring
+
+    def blink_transform(self, transform_kind):
+        assets_sp_sheet = self.game.services[ASSET_SERVICE].get('textures/galaga-spritesheet')
+        self.__transform_data = TransformData(self.kind, transform_kind)
+        # change the animation of bee or butterfly
+        self.transform_data.saved_anim = self.sprite.get_animation()
+        if self.kind == EntityType.BEE:
+            src_kind_name = 'bee'
+        elif self.kind == EntityType.BUTTERFLY:
+            src_kind_name = 'butterfly'
+        else:
+            # it should never happen
+            raise RuntimeError(f'Invalid source transform {self.kind.name}')
+
+        if transform_kind == EntityType.SCORPION:
+            dst_kind_name = 'scorpion'
+        elif transform_kind == EntityType.BOSCONIAN:
+            dst_kind_name = 'bosconian'
+        elif transform_kind == EntityType.GALAXIAN:
+            dst_kind_name = 'galaxian'
+        else:
+            # it should never happen
+            raise RuntimeError(f'Invalid destination transform {transform_kind.name}')
+
+        frame_names = [f'{src_kind_name}_1',
+                       f'{src_kind_name}_{dst_kind_name}_1',
+                       f'{src_kind_name}_2',
+                       f'{src_kind_name}_{dst_kind_name}_2']
+
+        animation = Animation2D()
+        for frame_name in frame_names:
+            animation.add_frame(assets_sp_sheet.frames[frame_name])
+        self.sprite.set_animation(animation)
+        self.sprite.play(fps=8, loop=True)
+        self.game.sfx_play(SOUND_TRANSFORM)
+        self.game.transform_svc.append(self.position_index)
+        self.plan = Plan.BLINK
+        self.timer = 1.0
+
+    def set_transform(self):
+        # hide orginal sprite
+        self.sprite.visible = False
+        self.transform_data.src_sprite = self.sprite
+        # setup the new transform's sprite
+        self.kind = self.transform_data.dst_enemy_kind
+        self.sprite = self.game.get_first_free_sprite_by_ent_type(self.kind, self.game.current_player_idx)
+        self.sprite.visible = True
+        self.sprite.position = pc2v(self.get_position())
+        self.sprite.angle = 0
+        self.plan = Plan.PATH
+
+    def reset_transform(self):
+        self.sprite.visible = False
+        self.game.ent_svc.dec_sprites_used(self.kind, self.game.current_player_idx)
+        self.sprite = self.transform_data.src_sprite
+        self.sprite.set_animation(self.transform_data.saved_anim)
+        self.sprite.play(fps=2, loop=True)
+        self.sprite.position = pc2v(self.get_position())
+        self.sprite.angle = 0
+        self.game.transform_svc.reset()
+
+    def clone_transform(self):
+        cloned_enemy = copy.copy(self)
+        cloned_enemy.kind = self.kind
+        cloned_enemy.sprite = self.game.get_first_free_sprite_by_ent_type(cloned_enemy.kind,
+                                                                          self.game.current_player_idx)
+        cloned_enemy.sprite.visible = True
+        cloned_enemy.sprite.position = pc2v(glm.vec2(cloned_enemy.x, cloned_enemy.y))
+        cloned_enemy.velocity = glm.vec2(self.velocity)
+        cloned_enemy.delta_dest = glm.vec2(self.delta_dest)
+        cloned_enemy.position_index = 43 + self.game.transform_svc.transforms_count
+        cloned_enemy.timer = 0.25
+        self.game.enemies[self.game.current_player_idx][cloned_enemy.position_index] = cloned_enemy
+        self.game.transform_svc.append(cloned_enemy.position_index)
+        cloned_enemy.plan = Plan.WAIT
+        cloned_enemy.path_index = self.path_index
+        cloned_enemy.point_index = len(gPathData[self.path_index >> 1])
+        return cloned_enemy
+
+    def elect_new_leader_transform(self):
+        if self.game.transform_svc.transforms_count <= 1:
+            self.game.transform_svc.remove(self.position_index)
+            return
+
+        new_leader_pos = self.game.transform_svc.get_transform(1)
+        if new_leader_pos == -1:
+            new_leader_pos = self.game.transform_svc.get_transform(2)
+        self.game.transform_svc.remove(new_leader_pos)
+
+        new_leader = self.game.enemy_at(new_leader_pos)
+        self.game.enemies[self.game.current_player_idx][new_leader.position_index] = self
+
+        new_leader.position_index = self.position_index
+        new_leader.plan = self.plan
+        new_leader.next_plan = self.next_plan
+        new_leader.point_index = self.point_index
+        self.game.enemies[self.game.current_player_idx][self.position_index] = new_leader
 
 
 class Bullet(Entity):

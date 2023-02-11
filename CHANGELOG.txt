@@ -1,3 +1,6 @@
+## 11-Feb-2023
+# Implemented transforms and its on-screen scoring
+
 ## 05-Feb-2023
 # Fixed capture beam collision with fighter (collision with sprite shissor wasn't accurate)
 

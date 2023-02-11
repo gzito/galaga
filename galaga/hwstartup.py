@@ -25,9 +25,9 @@ class Tile:
 
 class HwStartupState(GameState):
     class Substate(IntEnum):
-        MEM_CHECK = 1,
-        RAM_OK = 2,
-        SHOW_GRID = 3,
+        MEM_CHECK = 1
+        RAM_OK = 2
+        SHOW_GRID = 3
         END_HW_STARTUP = 4
 
     def __init__(self, game, substate=None):

@@ -15,14 +15,14 @@ class TestPath(GameState):
         self.fast_spawn = self.game.fast_spawn
         self.sprites_list = []
 
-        self.entity_kind = EntityType.BOSS_GREEN
+        self.entity_kind = EntityType.BEE
         self.position_index = 5
         self.path_indexes = [PATH_LAUNCH + gMirror[self.position_index],
                              PATH_BOSS_ATTACK + gMirror[self.position_index]]
 
     def enter(self):
         self.game.fast_spawn = False
-        self.entity = create_entity(self.entity_kind)
+        self.entity = create_entity(self.entity_kind, self.game)
         self.entity.plan = Plan.GOTO_GRID
         self.entity.position_index = self.position_index
         self.entity.x = pcx2vx(20)

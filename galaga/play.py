@@ -10,24 +10,24 @@ from galaga_data import *
 
 class PlayingState(GameState):
     class Substate(IntEnum):
-        InitGame = 1,
-        StageInit = 2,
-        StageIconsInit = 3,
-        PreShowField = 4,
-        StageIcons = 5,
-        PlayerInit = 6,
-        PrePlay = 7,
-        Play = 8,
-        StageClear = 9,
-        PlayerDied = 10,
-        HideField = 11,
-        NextToPlay = 12,
-        ShowField = 13,
-        ShowChallengeResults = 14,
-        PlayerGameOver = 15,
-        ShowGameOverStats = 16,
-        HoldGameOverStats = 17,
-        HighScore = 18,
+        InitGame = 1
+        StageInit = 2
+        StageIconsInit = 3
+        PreShowField = 4
+        StageIcons = 5
+        PlayerInit = 6
+        PrePlay = 7
+        Play = 8
+        StageClear = 9
+        PlayerDied = 10
+        HideField = 11
+        NextToPlay = 12
+        ShowField = 13
+        ShowChallengeResults = 14
+        PlayerGameOver = 15
+        ShowGameOverStats = 16
+        HoldGameOverStats = 17
+        HighScore = 18
         HoldHighScore = 19
 
     def __init__(self, game, substate=None):
