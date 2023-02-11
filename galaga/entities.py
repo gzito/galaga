@@ -690,8 +690,11 @@ class Enemy(Entity):
 
         # is this enemy a cargo?
         if self.is_cargo():
+            cargo_boss = self.get_cargo_boss()
+            if cargo_boss:
+                cargo_boss.cargo.clear_at(self.cargo_index)
+                self.set_cargo_boss(None)
             self.cargo_index = -1
-            self.set_cargo_boss(None)
 
     def is_boss_kind(self):
         return self.kind == EntityType.BOSS_GREEN or self.kind == EntityType.BOSS_BLUE
@@ -1210,12 +1213,13 @@ class Enemy(Entity):
             if not self.game.transform_svc.is_active():
                 self.reset_transform()
 
+        self.plan = Plan.DEAD
+        self.game.sfx_play(g_kill_sound[self.kind])
+
         scoring = self.assign_scoring()
         self.game.increment_score(scoring)
 
-        self.plan = Plan.DEAD
         self.clear_attack_and_cargo_flags()
-        self.game.sfx_play(g_kill_sound[self.kind])
 
         # bosses and transforms have dedicated on-screen scoring
         if scoring == 150 or scoring >= 400:
