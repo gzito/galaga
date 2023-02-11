@@ -1,5 +1,4 @@
 from constants import *
-from pyjam import utils
 from pyjam.sprite import Sprite
 from pyjam.application import *
 from pyjam.constants import *

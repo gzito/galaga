@@ -33,6 +33,9 @@ def create_entity(kind, game):
     return entity
 
 
+# ===================================================================================================
+# Entity
+# ===================================================================================================
 class Entity:
     @property
     def game(self):
@@ -102,6 +105,9 @@ class Entity:
         return glm.vec2(self.x, self.y)
 
 
+# ===================================================================================================
+# Grid
+# ===================================================================================================
 class Grid:
     @property
     def game(self):
@@ -202,6 +208,9 @@ class Grid:
                     self.__dir = 1.0
 
 
+# ===================================================================================================
+# Player
+# ===================================================================================================
 class Player:
     @property
     def game(self):
@@ -631,6 +640,9 @@ class Player:
         return False
 
 
+# ===================================================================================================
+# Enemy
+# ===================================================================================================
 class Enemy(Entity):
     next_explosion = 0
 
@@ -1213,11 +1225,11 @@ class Enemy(Entity):
             if not self.game.transform_svc.is_active():
                 self.reset_transform()
 
-        self.plan = Plan.DEAD
-        self.game.sfx_play(g_kill_sound[self.kind])
-
         scoring = self.assign_scoring()
         self.game.increment_score(scoring)
+
+        self.plan = Plan.DEAD
+        self.game.sfx_play(g_kill_sound[self.kind])
 
         self.clear_attack_and_cargo_flags()
 

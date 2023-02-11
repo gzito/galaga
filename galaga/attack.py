@@ -1,6 +1,5 @@
 import random
 
-from galaga.transform import TransformData
 from galaga_data import *
 from pyjam.application import Game
 
