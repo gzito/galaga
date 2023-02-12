@@ -460,7 +460,7 @@ class PlayingState(GameState):
 
         player.score = 0
         player.lives = 2
-        player.stage = 1
+        player.stage = 4
         player.enemies_alive = 0
         player.shots_fired = 0
         player.hits = 0

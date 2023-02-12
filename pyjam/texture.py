@@ -1,4 +1,4 @@
-# a tiny wrapper on mlg texture
+# a tiny wrapper around mlg texture
 
 import moderngl as mgl
 

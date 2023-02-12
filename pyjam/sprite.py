@@ -1,9 +1,3 @@
-# ------------------------------------------------------------------------------
-#
-# Sprite
-#
-# ------------------------------------------------------------------------------
-
 import copy
 
 import glm
@@ -11,7 +5,6 @@ import pygame as pg
 from Box2D import b2PolygonShape, b2Transform, b2Vec2, b2Rot, b2TestOverlap
 
 from pyjam.core import Bounds
-from pyjam.sprites import animation
 from pyjam.sprites.frame import SpriteFrame
 from pyjam.sprites.animation import Animation2D
 from pyjam.sprites.batch import SpriteBatch, SpriteEffects
@@ -153,6 +146,8 @@ class Sprite:
 
     @frame.setter
     def frame(self, value: SpriteFrame):
+        if self.is_playing():
+            self.stop()
         self.__frame = value
 
     @property

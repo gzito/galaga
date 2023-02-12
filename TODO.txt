@@ -9,4 +9,6 @@
 # [X] Handle other kind of enemies: transforms (Scorpion, Bosconian, Galaxian)
 # [X] Implement on-screen scoring for transforms triple
 # [ ] Design and implement other challenge stages (> 3) and put in Dragonfly, Mosquito & Enterprise
+# [ ] In challenge stages there must be no extra enemies
+# [ ] Fix and enhance enemies animations
 # -----------------

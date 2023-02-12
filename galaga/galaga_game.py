@@ -34,7 +34,7 @@ class Galaga(Game):
         self.go_fullscreen = False
 
         # if True skip the initial hardware setup sequence
-        self.skip_hw_startup = False
+        self.skip_hw_startup = True
 
         # if True spawn waves as fast as possibile - use it only to accelerate testing ;)
         self.fast_spawn = False
@@ -46,7 +46,7 @@ class Galaga(Game):
         self.invulnerability = False
 
         # self-explanatory
-        self.infinite_lives = False
+        self.infinite_lives = True
 
         # -------------
         # services
@@ -78,7 +78,7 @@ class Galaga(Game):
 
         # all bullets possible on-screen (18)
         # the first 4 bullets are blue, the others are red
-        self.bullets = [Bullet() for x in range(18)]
+        self.bullets = [Bullet() for x in range(MAX_BULLETS)]
 
         # next slot to use for enemy bullet
         self.bullet_index = 0
@@ -130,15 +130,25 @@ class Galaga(Game):
 
         return self.enemies[self.current_player_idx][enemy_idx]
 
+    def set_enemy_at(self, enemy_idx, enemy):
+        """
+        Sets the enemy entity for the current player and at the given index
+        """
+
+        self.enemies[self.current_player_idx][enemy_idx] = enemy
+
     def get_first_sprite_by_ent_type(self, ent_type: EntityType):
         return self.sprites[self.ent_svc.get_sprite_offset(ent_type)]
 
     def get_sprite_at_by_ent_type(self, ent_type: EntityType, idx: int):
         return self.sprites[self.ent_svc.get_sprite_offset(ent_type) + idx]
 
-    def get_first_free_sprite_by_ent_type(self, ent_type: EntityType, player_idx: int):
-        """ returns the first free sprite for the given entity type and mark the sprite as used """
-        return self.sprites[self.ent_svc.get_first_free_sprite_idx(ent_type, player_idx)]
+    def get_first_free_sprite_by_ent_type(self, ent_type: EntityType):
+        """
+            returns the first free sprite for the given entity type and for the current player
+            and mark the sprite as used
+        """
+        return self.sprites[self.ent_svc.get_first_free_sprite_idx(ent_type, self.current_player_idx)]
 
     def instantiate_state(self, state_name):
         if state_name == 'AttractState':
@@ -199,25 +209,32 @@ class Galaga(Game):
         entity_offset = len(self.sprites)
         for et in EntityType:
             sprites_needed = self.ent_svc.get_sprite_numbers(et)
+
+            ent_data = self.ent_svc.get_entity_data(et)
+            frames_list = Galaga.get_frames(ent_data.frame_name, ent_data.frame_numbers)
+            base_frame = assets_sp_sheet.frames[frames_list[0]]
+
+            animation = None
+
+            if len(frames_list) > 1:
+                animation = Animation2D()
+                for frame in frames_list:
+                    animation.add_frame(assets_sp_sheet.frames[frame])
+                animation.play(fps=2, loop=True)
+                ent_data.grid_animation = animation
+
             for j in range(sprites_needed):
-                ent_data = self.ent_svc.get_entity_data(et)
-                frames_list = Galaga.get_frames(ent_data.frame_name, ent_data.frame_numbers)
-                frame = assets_sp_sheet.frames[frames_list[0]]
-                sprite = Sprite(frame)
+                sprite = Sprite(base_frame)
 
                 # frames are double in size compared to the original ones
-                sprite.size = glm.vec2(frame.width / 2, frame.height / 2)
+                sprite.size = glm.vec2(base_frame.width / 2, base_frame.height / 2)
                 sprite.visible = False
                 if ent_data.shape_size != (0, 0):
                     sprite.shape = b2PolygonShape(box=(ent_data.shape_size[0] / 2,
                                                        ent_data.shape_size[1] / 2))
 
                 if len(frames_list) > 1:
-                    animation = Animation2D()
-                    for frame in frames_list:
-                        animation.add_frame(assets_sp_sheet.frames[frame])
                     sprite.set_animation(animation)
-                    sprite.play(fps=2, loop=True)
 
                 self.sprites.append(sprite)
 
@@ -291,6 +308,11 @@ class Galaga(Game):
             self.change_state(self.instantiate_state('AttractState'))
         else:
             self.change_state(self.instantiate_state('HwStartupState'))
+
+    def update_grid_animations(self):
+        for kind in self.ent_svc.ent_data.values():
+            if kind.grid_animation:
+                kind.grid_animation.update(self.delta_time)
 
     @staticmethod
     def get_frames(base_frame_name, frames_count):

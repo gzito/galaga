@@ -28,7 +28,7 @@ def create_entity(kind, game):
         entity = Entity()
 
     entity.kind = kind
-    entity.sprite = game.get_first_free_sprite_by_ent_type(kind, game.current_player_idx)
+    entity.sprite = game.get_first_free_sprite_by_ent_type(kind)
 
     return entity
 
@@ -471,8 +471,7 @@ class Player:
                 self.captured_fighter = captured_entity
                 boss_entity = self.get_captor_boss()
                 # sets the captured fighter position in the grid, one row just above the captor boss
-                self.game.enemies[self.game.current_player_idx][
-                    boss_entity.position_index - 4] = captured_entity
+                self.game.set_enemy_at(boss_entity.position_index - 4, captured_entity)
                 ship_0.sprite.visible = False
                 ship_0.timer = 2.0
                 self.capture_state = CaptureState.DISPLAY_CAPTURED
@@ -962,7 +961,6 @@ class Enemy(Entity):
                 # clone the transform
                 if self.game.transform_svc.transforms_count < 3:
                     self.clone_transform()
-                    self.game.player().enemies_alive += 1
                 leader_pos = self.game.transform_svc.get_transform(0)
                 self.path_index = PATH_BEE_ATTACK + gMirror[leader_pos]
                 self.next_plan = Plan.DESCEND
@@ -1158,8 +1156,7 @@ class Enemy(Entity):
                         self.sprite.visible = False
                         # enable the blue
                         self.kind = EntityType.BOSS_BLUE
-                        self.sprite = self.game.get_first_free_sprite_by_ent_type(EntityType.BOSS_BLUE,
-                                                                                  self.game.current_player_idx)
+                        self.sprite = self.game.get_first_free_sprite_by_ent_type(EntityType.BOSS_BLUE)
                         self.sprite.position = pc2v(glm.vec2(self.x, self.y))
                         self.sprite.angle = self.rotation
                         self.sprite.visible = True
@@ -1357,8 +1354,7 @@ class Enemy(Entity):
     def blink_transform(self, transform_kind):
         assets_sp_sheet = self.game.services[ASSET_SERVICE].get('textures/galaga-spritesheet')
         self.__transform_data = TransformData(self.kind, transform_kind)
-        # change the animation of bee or butterfly
-        self.transform_data.saved_anim = self.sprite.get_animation()
+
         if self.kind == EntityType.BEE:
             src_kind_name = 'bee'
         elif self.kind == EntityType.BUTTERFLY:
@@ -1398,18 +1394,19 @@ class Enemy(Entity):
         self.transform_data.src_sprite = self.sprite
         # setup the new transform's sprite
         self.kind = self.transform_data.dst_enemy_kind
-        self.sprite = self.game.get_first_free_sprite_by_ent_type(self.kind, self.game.current_player_idx)
+        self.sprite = self.game.get_first_free_sprite_by_ent_type(self.kind)
         self.sprite.visible = True
         self.sprite.position = pc2v(self.get_position())
         self.sprite.angle = 0
         self.plan = Plan.PATH
 
     def reset_transform(self):
+        # orginal enemy's kind is not immediatly restored due to scoring assignment
         self.sprite.visible = False
         self.game.ent_svc.dec_sprites_used(self.kind, self.game.current_player_idx)
         self.sprite = self.transform_data.src_sprite
-        self.sprite.set_animation(self.transform_data.saved_anim)
-        self.sprite.play(fps=2, loop=True)
+        self.game.update_grid_animations()
+        self.sprite.set_animation(self.game.ent_svc.get_grid_animation(self.transform_data.src_enemy_kind))
         self.sprite.position = pc2v(self.get_position())
         self.sprite.angle = 0
         self.game.transform_svc.reset()
@@ -1417,19 +1414,19 @@ class Enemy(Entity):
     def clone_transform(self):
         cloned_enemy = copy.copy(self)
         cloned_enemy.kind = self.kind
-        cloned_enemy.sprite = self.game.get_first_free_sprite_by_ent_type(cloned_enemy.kind,
-                                                                          self.game.current_player_idx)
+        cloned_enemy.sprite = self.game.get_first_free_sprite_by_ent_type(cloned_enemy.kind)
         cloned_enemy.sprite.visible = True
         cloned_enemy.sprite.position = pc2v(glm.vec2(cloned_enemy.x, cloned_enemy.y))
         cloned_enemy.velocity = glm.vec2(self.velocity)
         cloned_enemy.delta_dest = glm.vec2(self.delta_dest)
         cloned_enemy.position_index = 43 + self.game.transform_svc.transforms_count
         cloned_enemy.timer = 0.25
-        self.game.enemies[self.game.current_player_idx][cloned_enemy.position_index] = cloned_enemy
+        self.game.set_enemy_at(cloned_enemy.position_index, cloned_enemy)
         self.game.transform_svc.append(cloned_enemy.position_index)
         cloned_enemy.plan = Plan.WAIT
         cloned_enemy.path_index = self.path_index
         cloned_enemy.point_index = len(gPathData[self.path_index >> 1])
+        self.game.player().enemies_alive += 1
         return cloned_enemy
 
     def elect_new_leader_transform(self):
@@ -1443,13 +1440,13 @@ class Enemy(Entity):
         self.game.transform_svc.remove(new_leader_pos)
 
         new_leader = self.game.enemy_at(new_leader_pos)
-        self.game.enemies[self.game.current_player_idx][new_leader.position_index] = self
+        self.game.set_enemy_at(new_leader.position_index, self)
 
         new_leader.position_index = self.position_index
         new_leader.plan = self.plan
         new_leader.next_plan = self.next_plan
         new_leader.point_index = self.point_index
-        self.game.enemies[self.game.current_player_idx][self.position_index] = new_leader
+        self.game.set_enemy_at(self.position_index, new_leader)
 
 
 class Bullet(Entity):

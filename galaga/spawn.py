@@ -46,22 +46,28 @@ class EnemySpawner:
             # stages < 4, and stage 10 don't get extra enemies
             if stage >= 4 and stage != 10:
                 if 4 <= stage <= 8:
+                    # 5,5,4,4,4,4,5,5,5,5
                     if number == 0 and (wave == 0 or wave > 2):
                         give = 1
                 elif stage == 9:
+                    # 6,6,5,5,5,5,5,5,5,5
                     give = 1
                     if wave >= 1 and number != 0:
                         give = 0
                 elif stage == 12:
+                    # 5,5,5,5,5,5,5,5,5,5
                     if number == 0:
                         give = 1
                 elif stage == 13:
+                    # 6,6,5,5,6,6,6,6,6,6
                     give = 1
                     if wave == 1 and number != 0:
                         give = 0
                 else:
+                    # 6,6,6,6,6,6,6,6,6,6
                     give = 1
 
+        # if give = 1 then set an extra enemy insert location, else don't give an extra enemy
         if give:
             self.extra_enemy[side] = randint(self.extra_enemy[side], 3)
         else:
@@ -174,7 +180,7 @@ class EnemySpawner:
         the_path = path[current_player.kind_index]
 
         enemy.kind = kind
-        enemy.sprite = self.game.get_first_free_sprite_by_ent_type(kind, self.game.current_player_idx)
+        enemy.sprite = self.game.get_first_free_sprite_by_ent_type(kind)
         enemy.position_index = position
         enemy.plan = Plan.PATH
         enemy.next_plan = next_plan

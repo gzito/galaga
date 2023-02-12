@@ -3,6 +3,7 @@ import os.path
 import pygame as pg
 from enum import IntEnum
 from constants import *
+from pyjam.sprites.animation import Animation2D
 from pyjam.text import TextAlignment
 
 
@@ -62,6 +63,7 @@ class Plan(IntEnum):
     CLONE = 17
     WAIT = 18
 
+
 class BeamState(IntEnum):
     OFF = 0
     BOSS_SELECTED = 1
@@ -118,6 +120,9 @@ class EntityData:
 
         # the shape size of this entity type (used for collision detection)
         self.shape_size = shape_size
+
+        # the animation when the entity is on the grid
+        self.grid_animation = None
 
 
 class EntitiesService:
@@ -179,6 +184,12 @@ class EntitiesService:
 
     def set_sprites_used(self, ent_type: EntityType, player_idx: int, value: int):
         self.ent_data[ent_type].sprites_used[player_idx] = value
+
+    def get_grid_animation(self, ent_type: EntityType) -> Animation2D:
+        return self.ent_data[ent_type].grid_animation
+
+    def set_grid_animation(self, ent_type: EntityType, value: Animation2D):
+        self.ent_data[ent_type].grid_animation = value
 
     def inc_sprites_used(self, ent_type: EntityType, player_idx: int):
         self.ent_data[ent_type].sprites_used[player_idx] += 1

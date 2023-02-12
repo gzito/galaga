@@ -7,12 +7,6 @@ class TransformData:
         # transformed enemy: scorpion, bosconian or galaxian
         self.dst_enemy_kind = dst_enemy_kind
 
-        # transform timer
-        #self.timer = 0.0
-
-        # saved original enemy's animation (bee or butterfly)
-        self.saved_anim = None
-
 
 class TransformService:
     def __init__(self):
