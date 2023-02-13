@@ -459,8 +459,8 @@ class PlayingState(GameState):
         player.ships[1].sprite.position = pc2v(glm.vec2(player.ships[1].x, player.ships[1].y))
 
         player.score = 0
-        player.lives = 2
-        player.stage = 4
+        player.lives = self.game.num_of_lives
+        player.stage = self.game.initial_stage
         player.enemies_alive = 0
         player.shots_fired = 0
         player.hits = 0
