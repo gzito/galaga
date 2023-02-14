@@ -52,13 +52,8 @@ I called it **pyjam**.
 
 > Please note that both [swig](https://www.swig.org/) and a C++ compiler are required to be able to build it. 
 
-## Installation
-cd into the `root` folder and run:  
-```shell
-$ pip install -r requirements.txt
-```
-
-To play Galaga, cd into the `galaga` subfolder and run `main.py`.  
+## Installation of pybox2d and pyjam-galaga requirements
+See [INSTALL.md](./INSTALL.md)
 
 ## pyjam-galaga keys  
 **Enter:** insert coin  
