@@ -2,7 +2,7 @@ import os
 
 from Box2D import b2PolygonShape
 
-from galaga.transform import TransformService
+from transform import TransformService
 from galaga_data import *
 from background import StarsService
 from fxservice import RunningFxService
