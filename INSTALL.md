@@ -3,7 +3,7 @@
 Open up the command prompt, create a virtual enviroment and activate it:
 
 `> python -m venv %HOMEPATH%\.virtualenvs\galaga`  
-`> cd %HOMEPATH%\.virtualenvs\pyjam-galaga\Scripts`  
+`> cd %HOMEPATH%\.virtualenvs\galaga\Scripts`  
 `> .\activate.bat`  
 
 ## Building PyBox2D
