@@ -1,4 +1,4 @@
-# pyjam-galaga
+# galaga
 Remake of 1981's Galaga arcade game written in python, pyjam library and moderngl.
 Based on original work by Stefan Wessels.
 
@@ -24,7 +24,7 @@ hence in Basic language.
 I personally think Stefan did a great job, making it really clear for the first time how to code Galaga's mechanics.
 I studied his code in great detail and I thought to myself: ***why not make a conversion using Python?***
 
-![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-1.jpg?raw=true)
+![](./screenshot-1.jpg?raw=true)
 
 ## pyjam
 As many of you know, it is very challenging to make a game from scratch without an engine, and I didn't want to use Pygame
@@ -32,9 +32,9 @@ as 2d renderer, as I wanted more than what Pygame offers. I still opted to use P
 So, to render graphics I decided to write a small game library built on the *excellent* [`moderngl`](https://github.com/moderngl/moderngl) library, the OpenGL
 Python binding by Szabolcs Dombi and Einar Forselv. I added 2D animations, spritesheets and rewrote some XNA / MonoGame classes in Python, such as the `SpriteBatch` class.  
 I called it **pyjam**.  
-> You can find the library code into the [`pyjam` folder!](https://github.com/gzito/pyjam-galaga/tree/main/pyjam)
+> You can find the library code into the [`pyjam` folder!](https://github.com/gzito/galaga/tree/main/pyjam)
 
-![](https://github.com/gzito/pyjam-galaga/blob/main/screenshot-2.jpg?raw=true)
+![](./screenshot-2.jpg?raw=true)
 
 ## Dependencies
 [glcontext](https://github.com/moderngl/glcontext)  
@@ -52,10 +52,10 @@ I called it **pyjam**.
 
 > Please note that both [swig](https://www.swig.org/) and a C++ compiler are required to be able to build it. 
 
-## Installation of pybox2d and pyjam-galaga requirements
+## Installation of pybox2d and galaga requirements
 See [INSTALL.md](./INSTALL.md)
 
-## pyjam-galaga keys  
+## galaga keys  
 **Enter:** insert coin  
 **1 / 2:** start one or two player(s) match  
 **Left/right cursor keys:** move the ship  
@@ -63,7 +63,7 @@ See [INSTALL.md](./INSTALL.md)
 **Esc:** Exit the game  
 **F1:** show/hide FPS indicator  
 
-## pyjam-galaga current status
+## galaga current status
 For some pieces of Stefan's code I ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to Python and pyjam.
 I also added the code to complete the `rescue of fighter sequence`, missing in the original
