@@ -66,8 +66,8 @@ See [INSTALL.md](./INSTALL.md)
 ## pyjam-galaga current status
 For some pieces of Stefan's code I ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to Python and pyjam.
-I also added the code to complete the `rescue of fighter sequence`, missing in the original
-Stefan's work.
+I added the code to complete the `rescue of fighter sequence` and also implemented
+`transforms`, that were missing in the original Stefan's work.
 
 By default, the game runs in windowed mode. However, it can also run in fullscreen. Just change the `go_fullscreen` configuration
 attribute in the `Galaga` class.
