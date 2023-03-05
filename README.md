@@ -55,7 +55,7 @@ I called it **pyjam**.
 ## Installation of pybox2d and galaga requirements
 See [INSTALL.md](./INSTALL.md)
 
-## galaga keys  
+## Controls and keys  
 **Enter:** insert coin  
 **1 / 2:** start one or two player(s) match  
 **Left/right cursor keys:** move the ship  
@@ -63,7 +63,7 @@ See [INSTALL.md](./INSTALL.md)
 **Esc:** Exit the game  
 **F1:** show/hide FPS indicator  
 
-## galaga current status
+## Game current status
 For some pieces of Stefan's code I ported them as they are to Python language.
 For other parts I did some refactoring and adaptation to Python and pyjam.
 I also added the code to complete the `rescue of fighter sequence`, missing in the original
