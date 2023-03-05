@@ -55,7 +55,7 @@ I called it **pyjam**.
 ## Installation of pybox2d and galaga requirements
 See [INSTALL.md](./INSTALL.md)
 
-## Controls and keys  
+## Controls  
 **Enter:** insert coin  
 **1 / 2:** start one or two player(s) match  
 **Left/right cursor keys:** move the ship  
