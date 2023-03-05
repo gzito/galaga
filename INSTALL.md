@@ -2,7 +2,7 @@
 
 Open up the command prompt, create a virtual enviroment and activate it:
 
-`> python -m venv %HOMEPATH%\.virtualenvs\pyjam-galaga`  
+`> python -m venv %HOMEPATH%\.virtualenvs\galaga`  
 `> cd %HOMEPATH%\.virtualenvs\pyjam-galaga\Scripts`  
 `> .\activate.bat`  
 
@@ -24,15 +24,15 @@ Open up the command prompt, create a virtual enviroment and activate it:
 `> cd %HOMEPATH%\src`
 
 2. Clone (or fork) the pyjam-galaga source:  
-`> git clone https://github.com/gzito/pyjam-galaga.git`
+`> git clone https://github.com/gzito/galaga.git`
 
 3. Setup the PYTHONPATH environment variable:  
-`> set PYTHONPATH=%HOMEPATH%\src\pyjam-galaga;%HOMEPATH%\src\pyjam-galaga\galaga;%HOMEPATH%\src\pyjam-galaga\pyjam`
+`> set PYTHONPATH=%HOMEPATH%\src\galaga;%HOMEPATH%\src\galaga\galaga;%HOMEPATH%\src\galaga\pyjam`
 
 4. Install requirements:  
-`> pip install -r .\pyjam-galaga\requirements.txt`
+`> pip install -r .\galaga\requirements.txt`
 
 5. Run the game:  
-`> cd .\pyjam-galaga\galaga`  
+`> cd .\galaga\galaga`  
 `> python main.py`
 
