@@ -45,13 +45,6 @@ I called it **pyjam**.
 [pygame](https://github.com/pygame/pygame)  
 [PyGLM](https://github.com/Zuzu-Typ/PyGLM)   
 
-### pybox2d prerequisites
-> pyjam requires [pybox2d](https://github.com/pybox2d/pybox2d) 2.3.10  
-> pybox2d 2.3.10 provides wheels for Python 2.7 and 3.5 up to 3.8. No wheels for 3.9, 3.10 nor 3.11.  
-> If using Python 3.9+ please follow build & install instructions [here](https://github.com/pybox2d/pybox2d/blob/master/INSTALL.md).
-
-> Please note that both [swig](https://www.swig.org/) and a C++ compiler are required to be able to build it. 
-
 ## Installation of pybox2d and galaga requirements
 See [INSTALL.md](./INSTALL.md)
 
