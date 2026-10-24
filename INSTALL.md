@@ -61,7 +61,7 @@ Create new virtual environment
 `$ python3.12 -m venv $HOME/.virtualenvs/galaga`
 
 Activate virtual environment  
-`$ $HOME/.virtualenvs/galaga/bin/activate`  
+`$ source $HOME/.virtualenvs/galaga/bin/activate`  
 
 ## Building PyBox2D
 
